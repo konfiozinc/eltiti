@@ -1,0 +1,2626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>EL TITI Comidas Rápidas | Bello, Antioquia</title>
+    <meta name="description" content="El mejor menú de hamburguesas, salchipapas, chuzos y más. Domicilios en Barrio Nueva Jerusalén, Bello, Antioquia. ¡Pide ahora por WhatsApp!">
+    <meta name="keywords" content="comidas rapidas, hamburguesas, salchipapas, domicilios, bello, antioquia, el titi">
+    <meta name="author" content="KONFÍO ZINC">
+    <meta property="og:title" content="EL TITI Comidas Rápidas">
+    <meta property="og:description" content="La mejor comida rápida en Bello. Pide tu favorita por WhatsApp 📲">
+    <meta property="og:image" content="https://konfiozinc.github.io/eltiti/assets/logo/logo-el-titi.png">
+    <meta property="og:url" content="https://konfiozinc.github.io/eltiti/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://konfiozinc.github.io/eltiti/">
+    <meta name="theme-color" content="#B22222">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="assets/icons/favicon.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --rojo-principal: #B22222;
+            --rojo-oscuro: #800000;
+            --amarillo: #FFC300;
+            --blanco: #FFFFFF;
+            --negro-profundo: #0D0D0D;
+            --verde-whatsapp: #25D366;
+            --azul-brillante: #1E90FF;
+        }
+
+        * { box-sizing: border-box; }
+        [x-cloak] { display: none !important; }
+        .text-gray-300 { color: #d0d0d0 !important; }
+        .text-gray-400 { color: #b8b8b8 !important; }
+
+        html, body { overflow-x: hidden; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(145deg, #4a0000, #B22222, #800000);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .card-container {
+            max-width: 480px;
+            width: 100%;
+            background: linear-gradient(180deg, #B22222 0%, #800000 100%);
+            border-radius: 36px;
+            overflow: visible;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 80px rgba(178, 34, 34, 0.4);
+            position: relative;
+            border: 2px solid var(--amarillo);
+            /* clip sections individually, not the whole card */
+        }
+
+        .hero {
+            padding: 20px 20px 14px;
+            text-align: center;
+            background: var(--negro-profundo);
+            border-bottom: 3px solid var(--amarillo);
+        }
+
+        .hero-logo-img {
+            max-width: 170px;
+            width: 80%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+            border-radius: 20px;
+            background: var(--blanco);
+            padding: 4px;
+            box-shadow: 0 0 40px rgba(255, 195, 0, 0.35), 0 8px 30px rgba(0,0,0,0.5);
+            transition: transform 0.2s ease;
+        }
+        .hero-logo-img:hover { transform: scale(1.02); }
+        .hero-logo-img:active { transform: scale(0.95); }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 16px 4px 10px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+            background: var(--blanco);
+            color: var(--rojo-oscuro);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+        .status-badge.closed .dot { background: #ef4444; }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero-title {
+            font-size: 30px;
+            text-align: center;
+            font-weight: 900;
+            color: var(--amarillo);
+            text-shadow: 0 0 25px rgba(255, 195, 0, 0.3);
+            margin-top: 2px;
+            letter-spacing: 1px;
+        }
+
+        .hero-subtitle {
+            background: linear-gradient(90deg, var(--amarillo) 0%, #ff8c00 50%, var(--rojo) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-shadow: none;
+            text-align: center;
+            display: block;
+            width: 100%;
+        }
+
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .quick-btn {
+            border: none;
+            border-radius: 16px;
+            padding: 8px 4px;
+            text-align: center;
+            color: var(--blanco);
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .btn-qr {
+            background: linear-gradient(145deg, #003320, #006640) !important;
+            border: 2.5px solid #00e676 !important;
+            color: #00e676 !important;
+            box-shadow: 0 4px 18px rgba(0,230,118,0.45) !important;
+        }
+        .btn-qr i  { color: #00e676 !important; font-size: 21px !important; }
+        .btn-qr span { color: #00e676 !important; font-weight: 800 !important; }
+        .btn-qr:hover {
+            background: linear-gradient(145deg, #004d2e, #007a4a) !important;
+            box-shadow: 0 6px 26px rgba(0,230,118,0.65) !important;
+            transform: translateY(-2px);
+        }
+        @keyframes qrPulse {
+            0%,100% { box-shadow: 0 4px 18px rgba(230,57,0,0.55); }
+            50%      { box-shadow: 0 4px 30px rgba(255,68,0,0.9),  0 0 0 4px rgba(255,68,0,0.15); }
+        }
+        .quick-btn i {
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+        .quick-btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .quick-btn:hover i { transform: scale(1.15); }
+
+        .btn-whatsapp { background: #25D366; }
+        .btn-phone { background: #007AFF; }
+        .btn-location { background: #EA4335; }
+        .btn-share { background: #1877F2; }
+        .btn-save { background: #FFC300; color: #121212; }
+
+        .menu-section {
+            padding: 16px 16px 8px;
+            background: var(--negro-profundo);
+        }
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--amarillo);
+            padding-bottom: 8px;
+        }
+        .menu-header h2 {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--amarillo);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .menu-card {
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+            border-radius: 16px;
+            padding: 0;
+            border: 1px solid rgba(255, 195, 0, 0.3);
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        .menu-card:hover {
+            border-color: var(--amarillo);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(255, 195, 0, 0.2);
+        }
+        .menu-card img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 0;
+            margin-bottom: 0;
+            border: none;
+            border-bottom: 2px solid rgba(255,195,0,0.4);
+            display: block;
+        }
+        .menu-card .name {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--blanco);
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.3;
+            margin: 0 0 2px;
+            padding: 10px 10px 0;
+        }
+        .menu-card .price {
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--amarillo);
+            margin: 4px 0 6px;
+            padding: 0 10px;
+            text-align: center;
+        }
+        .menu-card .badge-agotado {
+            background: #ef4444;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 30px;
+            position: absolute;
+            top: 6px;
+            right: 6px;
+        }
+        .menu-card .btn-pedido {
+            background: var(--amarillo);
+            color: var(--negro-profundo);
+            border: none;
+            padding: 10px 14px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: calc(100% - 20px);
+            margin: 0 10px 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(255, 195, 0, 0.3);
+        }
+        .menu-card .btn-pedido:hover:not(:disabled) {
+            background: #e6ae00;
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(255, 195, 0, 0.5);
+        }
+        .menu-card .btn-pedido:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #555;
+        }
+        .menu-card.agotado {
+            opacity: 0.5;
+            filter: grayscale(0.5);
+        }
+
+        .carousel-section {
+            padding: 0 16px 8px;
+            background: var(--negro-profundo);
+        }
+        .carousel-section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff !important;
+            margin-bottom: 8px;
+        }
+        /* ══ NUESTRA COCINA (videos locales) ══ */
+        .video-section {
+            padding: 8px 16px 8px;
+            background: var(--negro-profundo);
+        }
+        .video-section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff !important;
+            margin-bottom: 8px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .video-grid {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 4px;
+        }
+        .video-grid::-webkit-scrollbar { height: 6px; }
+        .video-grid::-webkit-scrollbar-thumb { background: var(--amarillo); border-radius: 4px; }
+        .video-card {
+            flex: 0 0 60%;
+            scroll-snap-align: center;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--amarillo);
+            background: rgba(0,0,0,0.2);
+        }
+        .video-card video {
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            object-fit: cover;
+            display: block;
+            background: #000;
+        }
+        .video-card .video-label {
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--amarillo);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .carousel-slider {
+            display: flex !important;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            will-change: transform;
+        }
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.2);
+            border: 2px solid var(--amarillo);
+            height: 200px;
+        }
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+        .carousel-slide {
+            flex: 0 0 100%;
+            height: 100%;
+        }
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--amarillo);
+            color: var(--blanco);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            z-index: 10;
+        }
+        .carousel-btn:hover {
+            background: var(--amarillo);
+            color: var(--negro);
+        }
+        .carousel-btn.prev { left: 6px; }
+        .carousel-btn.next { right: 6px; }
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 0 8px;
+        }
+        .carousel-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #555;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .carousel-dots span.active {
+            background: var(--amarillo);
+            transform: scale(1.2);
+        }
+
+        .promo-banner {
+            background: linear-gradient(135deg, var(--amarillo), #e6ae00);
+            border-radius: 16px;
+            padding: 10px 16px;
+            margin: 0 16px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--rojo-oscuro);
+            box-shadow: 0 4px 20px rgba(255, 195, 0, 0.3);
+        } .qr-logo-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 12px 16px 60px;
+            font-size: 11px;
+            border-top: 1px solid var(--amarillo);
+            background: var(--negro-profundo);
+            border-radius: 0 0 36px 36px;
+        }
+        .footer .marca {
+            color: var(--amarillo);
+            font-weight: 700;
+            font-size: 11px;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── WhatsApp Float wrapper (rings viven aquí) ── */
+        .wa-float-wrap {
+            position: fixed;
+            bottom: 24px;
+            /* left se calcula con JS */
+            z-index: 50;
+            width: 56px;
+            height: 56px;
+        }
+        /* Anillos pulsantes — necesitan estar FUERA del link para no ser cortados */
+        .wa-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2.5px solid #00e676;
+            animation: waRing 2.4s ease-out infinite;
+            pointer-events: none;
+        }
+        .wa-ring:nth-child(2) { animation-delay: 0.8s; }
+        .wa-ring:nth-child(3) { animation-delay: 1.6s; }
+        @keyframes waRing {
+            0%   { transform: scale(1);   opacity: 0.8; }
+            100% { transform: scale(2.2); opacity: 0;   }
+        }
+        .whatsapp-float {
+            position: absolute;
+            inset: 0;
+            background: #00c853;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 3px rgba(0,230,118,0.25), 0 4px 20px rgba(0,200,83,0.6);
+            transition: transform 0.2s ease, box-shadow 0.2s;
+            text-decoration: none;
+            color: white;
+            font-size: 26px;
+            cursor: pointer;
+            border: none;
+            /* sin overflow:hidden para que los rings sean visibles */
+        }
+        .whatsapp-float:hover {
+            transform: scale(1.12);
+            background: #00e676;
+            box-shadow: 0 0 0 4px rgba(0,230,118,0.3), 0 6px 28px rgba(0,230,118,0.7);
+        }
+        .whatsapp-float:active { transform: scale(0.94); }
+        .whatsapp-float .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transform: scale(0);
+            animation: ripple-effect 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
+        /* shine en el botón */
+        .whatsapp-float::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.28) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .admin-panel {
+            display: none;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 16px 16px 20px;
+            border-top: 2px solid var(--amarillo);
+            backdrop-filter: blur(8px);
+        }
+        .admin-panel.open { display: block; }
+        .admin-panel h3 {
+            color: var(--amarillo);
+            font-weight: 800;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .admin-panel label {
+            color: #ddd;
+            font-size: 13px;
+            display: block;
+            margin-top: 4px;
+        }
+        .admin-panel input, .admin-panel select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--amarillo);
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            margin-bottom: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .admin-panel button {
+            background: var(--amarillo);
+            color: var(--rojo-oscuro);
+            font-weight: 700;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+        .admin-panel button:hover { transform: scale(1.02); }
+        .admin-panel .btn-danger { background: #ef4444; color: #fff; }
+        .admin-panel .product-admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 195, 0, 0.15);
+        }
+        .admin-panel .product-admin-item span { font-size: 12px; color: #ddd; }
+        .admin-panel .product-admin-item .actions i {
+            cursor: pointer;
+            margin: 0 4px;
+            font-size: 14px;
+        }
+        .admin-panel .product-admin-item .actions .fa-toggle-on { color: #22c55e; }
+        .admin-panel .product-admin-item .actions .fa-toggle-off { color: #ef4444; }
+
+        /* ===== INDICADOR DE SINCRONIZACIÓN ===== */
+        .sync-indicator {
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            z-index: 250;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(6px);
+            border-radius: 20px;
+            padding: 5px 12px 5px 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.12);
+            pointer-events: none;
+            transition: opacity .3s;
+        }
+        .sync-indicator .dot-sync {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .sync-indicator.connected .dot-sync { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+        .sync-indicator.syncing .dot-sync { background: #facc15; box-shadow: 0 0 6px #facc15; animation: pulse-sync 1s infinite; }
+        .sync-indicator.error .dot-sync { background: #ef4444; box-shadow: 0 0 6px #ef4444; animation: pulse-sync 1s infinite; }
+        @keyframes pulse-sync { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+        /* ===== BUSCADOR Y CATEGORÍAS ===== */
+        .menu-search-wrap {
+            padding: 0 4px 10px;
+        }
+        .menu-search-wrap input {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,195,0,0.35);
+            border-radius: 14px;
+            padding: 10px 14px;
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            outline: none;
+        }
+        .menu-search-wrap input::placeholder { color: #cfcfcf; }
+        .category-filters {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 0 4px 10px;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        .category-filters::-webkit-scrollbar { display: none; }
+        .category-chip {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,195,0,0.4);
+            background: rgba(0,0,0,0.35);
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .category-chip:active {
+            background: var(--amarillo);
+            color: #000;
+            border-color: var(--amarillo);
+        }
+        .no-results {
+            text-align: center;
+            padding: 24px 10px;
+            color: #f0e0c0;
+            font-size: 13px;
+            font-weight: 600;
+            grid-column: 1 / -1;
+        }
+        .menu-grid-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .categoria-group {
+            scroll-margin-top: 70px;
+            margin-bottom: 14px;
+        }
+        .categoria-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 2px 4px;
+        }
+        .categoria-emoji {
+            font-size: 18px;
+            line-height: 1;
+        }
+        .categoria-titulo {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: var(--amarillo);
+            text-shadow: 0 1px 4px rgba(0,0,0,.5);
+        }
+        .categoria-count {
+            margin-left: auto;
+            background: rgba(255,195,0,0.15);
+            border: 1px solid rgba(255,195,0,0.4);
+            color: var(--amarillo);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 12px;
+            padding: 2px 10px;
+            min-width: 26px;
+            text-align: center;
+        }
+        .categoria-separator {
+            height: 2px;
+            background: linear-gradient(90deg, var(--amarillo) 0%, rgba(255,195,0,0.08) 100%);
+            border-radius: 2px;
+            margin: 4px 2px 10px;
+        }
+
+        /* ===== ESTADÍSTICAS DEL PANEL ADMIN ===== */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .admin-stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,195,0,0.2);
+            border-radius: 12px;
+            padding: 8px 10px;
+        }
+        .admin-stat-card .num {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--amarillo);
+            font-family: 'Montserrat', sans-serif;
+        }
+        .admin-stat-card .lbl {
+            font-size: 10px;
+            color: #d0d0d0;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .admin-sync-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #ddd;
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: 10px;
+            padding: 6px 10px;
+            background: rgba(0,0,0,0.35);
+            border-radius: 10px;
+        }
+        .admin-search-wrap input { margin-bottom: 8px; }
+        .admin-panel .photo-upload-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .admin-panel .photo-upload-row label.upload-btn {
+            flex-shrink: 0;
+            background: rgba(255,195,0,0.15);
+            border: 1px solid rgba(255,195,0,0.4);
+            color: var(--amarillo);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .admin-panel .photo-upload-row input[type="file"] { display: none; }
+        .admin-panel .photo-preview {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(255,195,0,0.4);
+            flex-shrink: 0;
+        }
+        .img-info-msg {
+            font-size: 10.5px;
+            line-height: 1.5;
+            color: #d8c9a8;
+            background: rgba(255,195,0,0.08);
+            border: 1px solid rgba(255,195,0,0.25);
+            border-radius: 8px;
+            padding: 6px 8px;
+            margin: 6px 0;
+        }
+        .img-info-msg b { color: var(--amarillo); }
+        .admin-login-extra label {
+            color: #ddd;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--amarillo);
+            color: var(--rojo-oscuro);
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 13px;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .toast.show { opacity: 1; }
+
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: var(--negro-profundo);
+            margin: auto;
+            padding: 24px;
+            width: 90%;
+            max-width: 380px;
+            border-radius: 32px;
+            text-align: center;
+            position: relative;
+            border: 2px solid var(--amarillo);
+        }
+        .close-button {
+            color: #9ca3af;
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover { color: var(--blanco); }
+
+        @media (max-width: 440px) {
+            .menu-grid { grid-template-columns: 1fr; }
+            .quick-buttons { grid-template-columns: repeat(3, 1fr); }
+            .carousel-slider {
+            display: flex !important;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            will-change: transform;
+        }
+        .carousel-container { height: 160px; }
+        }
+    
+
+        /* ══ TIEMPO DE ESPERA ══ */
+        .wait-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,195,0,0.15);
+            border: 1.5px solid rgba(255,195,0,0.5);
+            border-radius: 100px;
+            padding: 5px 14px;
+            font-family: Montserrat, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--amarillo);
+            margin: 6px auto 0;
+            cursor: default;
+        }
+        .wait-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--amarillo);
+            animation: pulseDot 1.5s ease-in-out infinite;
+        }
+
+
+
+        .review-form {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,195,0,.35);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .stars-input { display:flex; gap:6px; justify-content:center; margin:10px 0; }
+        .star-btn {
+            font-size: 38px;
+            cursor: pointer !important;
+            transition: transform .15s, opacity .15s, color .15s;
+            background: none;
+            border: none;
+            padding: 0 3px;
+            color: rgba(255,195,0,0.3);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            touch-action: manipulation;
+            line-height: 1;
+        }
+        .star-btn.active {
+            color: #FFC300 !important;
+            transform: scale(1.2);
+            text-shadow: 0 0 12px rgba(255,195,0,.7);
+        }
+        .star-btn:hover { color: rgba(255,195,0,0.7); }
+        .review-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: #fff;
+            font-family: Montserrat, sans-serif;
+            font-size: 12px;
+            outline: none;
+            resize: none;
+        }
+        .review-input:focus { border-color: var(--amarillo); }
+        .btn-enviar-reseña {
+            width: 100%;
+            padding: 11px;
+            margin-top: 10px;
+            background: linear-gradient(135deg,#FFC300,#ff8c00);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-family: Montserrat,sans-serif;
+            font-weight: 900;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .review-card {
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,195,0,.25);
+            border-radius: 12px;
+            padding: 13px 15px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(4px);
+        }
+        .review-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+        .review-author { font-size:13px; font-weight:900; color:#ffffff; text-shadow:0 1px 3px rgba(0,0,0,.8); }
+        .review-stars { font-size:14px; letter-spacing:2px; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+        .review-text { font-size:12px; color:#f0e8d0; line-height:1.55; font-weight:500; }
+        .review-date { font-size:10px; color:#d4b896; margin-top:5px; font-weight:600; }
+        .rating-summary {
+            text-align: center;
+            padding: 10px 0 14px;
+        }
+        .rating-big { font-size:36px; font-weight:900; color:var(--amarillo); font-family:Montserrat,sans-serif; }
+        .rating-stars-big { font-size:20px; letter-spacing:2px; }
+        .rating-count { font-size:11px; color:#888; margin-top:2px; }
+
+        /* ══ CARRITO ══ */
+        .cart-fab {
+            position: fixed;
+            bottom: 90px;
+            z-index: 49;
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(135deg, #FFC300, #ff8c00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(255,195,0,0.55);
+            cursor: pointer;
+            border: none;
+            font-size: 22px;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .cart-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(255,195,0,0.7); }
+        .cart-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 900;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000;
+            font-family: Montserrat, sans-serif;
+        }
+        .cart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 400;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+        .cart-sheet {
+            width: 100%;
+            max-width: 480px;
+            background: #111;
+            border-top: 3px solid var(--amarillo);
+            border-radius: 24px 24px 0 0;
+            padding: 0 0 32px;
+            max-height: 82vh;
+            overflow-y: auto;
+            animation: sheetUp .3s cubic-bezier(.32,1,.46,1);
+        }
+        @keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .cart-handle { width: 40px; height: 4px; background: rgba(255,195,0,.4); border-radius:2px; margin: 12px auto 0; }
+        .cart-header { padding: 14px 20px; border-bottom: 1px solid rgba(255,195,0,.15); display:flex; justify-content:space-between; align-items:center; }
+        .cart-title { font-family:Montserrat,sans-serif; font-size:16px; font-weight:900; color:var(--amarillo); letter-spacing:1px; }
+        .cart-item { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid rgba(255,255,255,.06); }
+        .cart-item-emoji { font-size:1.8rem; flex-shrink:0; }
+        .cart-item-info { flex:1; min-width:0; }
+        .cart-item-name { font-size:13px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .cart-item-price { font-size:13px; font-weight:800; color:var(--amarillo); }
+        .cart-qty { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+        .qty-btn { width:28px; height:28px; border-radius:50%; border:none; font-size:16px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:Montserrat,sans-serif; transition:all .15s; }
+        .qty-minus { background:rgba(255,255,255,.1); color:#fff; }
+        .qty-minus:hover { background:#ef4444; }
+        .qty-plus  { background:var(--amarillo); color:#000; }
+        .qty-plus:hover  { background:#ffdd00; }
+        .qty-num { font-size:15px; font-weight:900; color:#fff; min-width:20px; text-align:center; font-family:Montserrat,sans-serif; }
+        .cart-total-row { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:rgba(255,195,0,.07); border-top:1px solid rgba(255,195,0,.2); }
+        .cart-total-label { font-size:14px; font-weight:700; color:#aaa; font-family:Montserrat,sans-serif; }
+        .cart-total-val { font-size:22px; font-weight:900; color:var(--amarillo); font-family:Montserrat,sans-serif; }
+        .cart-actions { padding:14px 20px 0; display:flex; flex-direction:column; gap:10px; }
+        .btn-enviar-pedido { width:100%; padding:14px; background:linear-gradient(135deg,#25D366,#128C7E); color:#fff; border:none; border-radius:14px; font-family:Montserrat,sans-serif; font-weight:900; font-size:15px; cursor:pointer; letter-spacing:.5px; box-shadow:0 4px 20px rgba(37,211,102,.4); transition:all .2s; }
+        .btn-enviar-pedido:hover { box-shadow:0 6px 28px rgba(37,211,102,.6); transform:translateY(-2px); }
+        .btn-vaciar { width:100%; padding:11px; background:transparent; border:1px solid rgba(255,255,255,.15); border-radius:12px; color:#888; font-family:Montserrat,sans-serif; font-size:12px; cursor:pointer; }
+        .btn-vaciar:hover { border-color:#ef4444; color:#ef4444; }
+        .cart-empty { text-align:center; padding:40px 20px; color:#666; font-family:Montserrat,sans-serif; }
+        .cart-empty .cart-empty-icon { font-size:3rem; margin-bottom:12px; }
+        .cart-empty p { font-size:13px; }
+
+        /* Botón Agregar al carrito */
+        .menu-card .btn-pedido {
+            background: linear-gradient(135deg, #FFC300, #ff8c00) !important;
+            font-size: 12px !important;
+            letter-spacing: 0.5px;
+        }
+        .menu-card .btn-pedido:not(:disabled):hover {
+            background: linear-gradient(135deg, #ffdd00, #ff6600) !important;
+            transform: scale(1.03);
+        }
+
+        
+        /* ══ TIEMPO DE ENTREGA ══ */
+        .delivery-time-bar {
+            background: linear-gradient(135deg, rgba(255,195,0,0.12), rgba(255,140,0,0.08));
+            border: 1px solid rgba(255,195,0,0.3);
+            border-radius: 12px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 8px 16px 0;
+        }
+        .delivery-time-icon { font-size: 1.1rem; animation: spin 4s linear infinite; }
+        @keyframes spin { 0%,90%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .delivery-time-text {
+            font-family: Montserrat, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--amarillo);
+            letter-spacing: 0.5px;
+        }
+        .delivery-time-val {
+            font-size: 14px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        /* ══ RESEÑAS ══ */
+        .reviews-section {
+            padding: 16px;
+            border-top: 1px solid rgba(255,195,0,0.15);
+        }
+        .reviews-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .reviews-title {
+            font-family: Montserrat, sans-serif;
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--amarillo);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .reviews-avg {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: Montserrat, sans-serif;
+            font-size: 13px;
+            font-weight: 900;
+            color: #fff;
+        }
+        .review-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,195,0,0.12);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+        }
+        .review-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .review-name {
+            font-family: Montserrat, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .review-date {
+            font-size: 10px;
+            color: #666;
+        }
+        .review-stars { font-size: 13px; margin-bottom: 4px; }
+        .review-comment { font-size: 12px; color: #aaa; line-height: 1.4; }
+        .review-form {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,195,0,0.2);
+            border-radius: 14px;
+            padding: 14px;
+            margin-top: 14px;
+        }
+        .review-form-title {
+            font-family: Montserrat, sans-serif;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--amarillo);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stars-input { display: flex; gap: 6px; margin-bottom: 10px; }
+        .star-btn {
+            font-size: 22px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: transform .15s;
+            padding: 0;
+            filter: grayscale(1);
+            opacity: 0.5;
+        }
+        .star-btn.active { filter: grayscale(0); opacity: 1; transform: scale(1.1); }
+        .review-input {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,195,0,0.2);
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: #fff;
+            font-family: Montserrat, sans-serif;
+            font-size: 12px;
+            margin-bottom: 8px;
+            outline: none;
+        }
+        .review-input::placeholder { color: #999; }
+        #campoNombreReseña::placeholder { color: #999 !important; }
+        .review-input:focus { border-color: var(--amarillo); }
+        .btn-send-review {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, var(--amarillo), #ff8c00);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-family: Montserrat, sans-serif;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        .no-reviews {
+            text-align: center;
+            padding: 20px;
+            color: #555;
+            font-size: 12px;
+            font-family: Montserrat, sans-serif;
+        }
+
+        /* ══ NOTIFICACIONES ══ */
+        .notif-banner {
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));
+            border: 1px solid rgba(139,92,246,0.3);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin: 8px 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .notif-banner:hover { border-color: rgba(139,92,246,0.6); }
+        .notif-text { flex: 1; }
+        .notif-text b { font-size: 12px; color: #a78bfa; font-family: Montserrat,sans-serif; display: block; }
+        .notif-text span { font-size: 11px; color: #888; }
+        .notif-btn-allow {
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: Montserrat, sans-serif;
+            white-space: nowrap;
+        }
+
+        </style>
+</head>
+<body>
+
+<div id="app" x-data="appData" x-init="initApp()" class="card-container">
+
+    <!-- ===== INDICADOR DE SINCRONIZACIÓN ===== -->
+    <div class="sync-indicator" :class="syncStatus">
+        <span class="dot-sync"></span>
+        <span x-text="syncStatus === 'connected' ? 'Firebase conectado' : (syncStatus === 'syncing' ? 'Sincronizando' : 'Error de conexión')"></span>
+    </div>
+
+
+    <!-- ===== HERO ===== -->
+    <div class="hero">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:2px;position:relative;">
+            <button @click="installModalOpen = true" title="Instalar App"
+                style="width:36px;height:36px;background:linear-gradient(135deg,#FFC300,#ff8c00);border:none;border-radius:50%;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(255,195,0,0.5);flex-shrink:0;">
+                <i class="fas fa-download" style="font-size:15px;"></i>
+            </button>
+            <h1 class="hero-title" style="position:absolute;left:50%;transform:translateX(-50%);margin:0;pointer-events:none;white-space:nowrap;">EL TITI</h1>
+            <button @click="adminMode = !adminMode" title="Admin"
+                style="width:32px;height:32px;border-radius:50%;background:rgba(255,195,0,0.15);border:1px solid rgba(255,195,0,0.4);color:#FFC300;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">
+                <i class="fas fa-lock"></i>
+            </button>
+        </div>
+
+        <img src="assets/logo/logo-el-titi.png" alt="EL TITI Logo" class="hero-logo-img" @click="tapLogo()" decoding="async">
+
+        <div class="status-badge" :class="isOpen ? '' : 'closed'">
+            <span class="dot"></span>
+            <span x-text="isOpen ? 'ABIERTO' : 'CERRADO'"></span>
+        </div>
+
+        <p class="hero-subtitle mt-1">COMIDAS RÁPIDAS</p>
+
+        <div class="quick-buttons">
+            <a href="https://wa.me/573014387942" target="_blank" class="quick-btn btn-whatsapp">
+                <i class="fab fa-whatsapp"></i>
+                <span>WhatsApp</span>
+            </a>
+            <a href="tel:3014387942" class="quick-btn btn-phone">
+                <i class="fas fa-phone-alt"></i>
+                <span>Llamar</span>
+            </a>
+            <a href="https://www.google.com/maps/search/?api=1&query=6%C2%B019'02.5%22N+75%C2%B034'44.9%22W" target="_blank" class="quick-btn btn-location">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Ubicación</span>
+            </a>
+            <button @click="shareCard()" class="quick-btn btn-share">
+                <i class="fas fa-share-alt"></i>
+                <span>Compartir</span>
+            </button>
+            <button @click="saveContact()" class="quick-btn btn-save">
+                <i class="fas fa-address-card"></i>
+                <span>Guardar</span>
+            </button>
+            <button @click="abrirQR()" class="quick-btn btn-qr" style="">
+                <i class="fas fa-qrcode"></i>
+                <span>Código QR</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== PROMOCIONES ===== -->
+    <div class="promo-banner" x-show="promoText">
+        <span x-text="promoText"></span>
+    </div>
+
+    <!-- ===== MENÚ ===== -->
+    <div class="menu-section" style="color:#fff;">
+        <div class="menu-header">
+            <h2>🍔 MENÚ</h2>
+            <span x-text="productosFiltrados.length + ' producto' + (productosFiltrados.length !== 1 ? 's' : '')"></span>
+        </div>
+
+        <!-- Buscador en tiempo real -->
+        <div class="menu-search-wrap">
+            <input type="text" x-model="busqueda" placeholder="🔎 Buscar en el menú...">
+        </div>
+
+        <!-- Filtros de categoría (navegación rápida) -->
+        <div class="category-filters">
+            <template x-for="cat in categorias" :key="cat">
+                <a class="category-chip" :href="'#cat-' + cat.toLowerCase()">
+                    <span x-text="emojisCategoria[cat]"></span>
+                    <span x-text="cat"></span>
+                </a>
+            </template>
+        </div>
+
+        <div class="menu-grid-wrap">
+            <template x-for="grupo in categoriasConProductos" :key="grupo.nombre">
+                <div class="categoria-group" :id="'cat-' + grupo.nombre.toLowerCase()" x-show="grupo.count > 0">
+                    <div class="categoria-header">
+                        <span class="categoria-emoji" x-text="grupo.emoji"></span>
+                        <span class="categoria-titulo" x-text="grupo.nombre.toUpperCase()"></span>
+                        <span class="categoria-count" x-text="grupo.count"></span>
+                    </div>
+                    <div class="categoria-separator"></div>
+                    <div class="menu-grid">
+                        <template x-for="(p, idx) in grupo.productos" :key="p.id">
+                            <div class="menu-card" :class="{ 'agotado': p.agotado }">
+                                <img :src="p.imagen || 'assets/logo/no-image.webp'" :alt="p.nombre" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                                <span class="badge-agotado" x-show="p.agotado">AGOTADO</span>
+                                <div class="name" x-text="p.nombre"></div>
+                                <div class="price" x-text="'$' + parseInt(p.precio).toLocaleString('es-CO')"></div>
+                                <button class="btn-pedido" :disabled="p.agotado"
+                                    @click="p.agotado ? null : agregarAlCarrito(p)">
+                                    <span x-text="p.agotado ? '❌ AGOTADO' : '🛒 Agregar'"></span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+            <div class="no-results" x-show="productosFiltrados.length === 0">
+                😕 No se encontraron productos
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== GALERÍA (CARRUSEL) ===== -->
+    <div class="carousel-section" style="color:#fff;">
+        <h2 style="text-align:center;letter-spacing:2px;">GALERÍA</h2>
+        <div class="carousel-container" x-data="carouselData()" @touchstart="touchStart($event)" @touchend="touchEnd($event)">
+            <div class="carousel-track" :style="'transform: translateX(-' + (currentSlide * 100) + '%)'">
+                <template x-for="(img, idx) in images" :key="idx">
+                    <div class="carousel-slide">
+                        <img :src="img" :alt="'Galería ' + idx" loading="lazy" decoding="async" @error="$event.target.closest('.carousel-slide').style.display='none'">
+                    </div>
+                </template>
+            </div>
+            <button class="carousel-btn prev" @click="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+            <button class="carousel-btn next" @click="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+            <div class="carousel-dots">
+                <template x-for="(img, idx) in images" :key="idx">
+                    <span :class="{ 'active': idx === currentSlide }" @click="goTo(idx)"></span>
+                </template>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- ===== NUESTRA COCINA (VIDEOS LOCALES) ===== -->
+    <div class="video-section"
+        x-data="{ cocinaOk: true, especialidadesOk: true, promoOk: true }"
+        x-init="
+            fetch('assets/videos/cocina.mp4', {method:'HEAD'}).then(r => cocinaOk = r.ok).catch(() => cocinaOk = false);
+            fetch('assets/videos/especialidades.mp4', {method:'HEAD'}).then(r => especialidadesOk = r.ok).catch(() => especialidadesOk = false);
+            fetch('assets/videos/promo.mp4', {method:'HEAD'}).then(r => promoOk = r.ok).catch(() => promoOk = false);
+        "
+        x-show="cocinaOk || especialidadesOk || promoOk">
+        <h2>NUESTRA COCINA</h2>
+        <div class="video-grid">
+            <div class="video-card" x-show="cocinaOk">
+                <video src="assets/videos/cocina.mp4" poster="assets/galeria/foto1.webp" controls preload="none" playsinline @error="cocinaOk=false"></video>
+                <div class="video-label">Así preparamos tu pedido</div>
+            </div>
+            <div class="video-card" x-show="especialidadesOk">
+                <video src="assets/videos/especialidades.mp4" poster="assets/galeria/foto2.webp" controls preload="none" playsinline @error="especialidadesOk=false"></video>
+                <div class="video-label">Nuestras especialidades</div>
+            </div>
+            <div class="video-card" x-show="promoOk">
+                <video src="assets/videos/promo.mp4" poster="assets/galeria/foto3.webp" controls preload="none" playsinline @error="promoOk=false"></video>
+                <div class="video-label">Promociones EL TITI</div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- ══ SECCIÓN RESEÑAS ══ -->
+    <div class="reviews-section" style="background:rgba(0,0,0,0.3);border-radius:16px;margin:0 8px 16px;">
+        <!-- Encabezado con promedio -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:18px;">⭐</span>
+                <span style="font-family:Montserrat,sans-serif;font-size:14px;font-weight:900;color:var(--amarillo);letter-spacing:1px;text-shadow:0 1px 4px rgba(0,0,0,.5);">RESEÑAS</span>
+            </div>
+            <div x-show="reseñas.length > 0" style="text-align:right;">
+                <div style="font-size:18px;font-weight:900;color:var(--amarillo);font-family:Montserrat,sans-serif;text-shadow:0 1px 4px rgba(0,0,0,.6);" x-text="promedioEstrellas + ' ★'"></div>
+                <div style="font-size:10px;color:#f0d8a0;font-weight:700;" x-text="reseñas.length + ' reseña' + (reseñas.length!==1?'s':'')"></div>
+            </div>
+        </div>
+
+        <!-- Formulario nueva reseña -->
+        <div class="review-form">
+            <p style="font-size:13px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px;">¿Cómo fue tu experiencia?</p>
+            <!-- Estrellas -->
+            <div class="stars-input">
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 1}" @click.prevent="nuevaReseña.estrellas = 1">★</button>
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 2}" @click.prevent="nuevaReseña.estrellas = 2">★</button>
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 3}" @click.prevent="nuevaReseña.estrellas = 3">★</button>
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 4}" @click.prevent="nuevaReseña.estrellas = 4">★</button>
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 5}" @click.prevent="nuevaReseña.estrellas = 5">★</button>
+            </div>
+            <!-- Campo nombre con bloqueo total de autofill -->
+                <input
+                    id="campoNombreReseña"
+                    type="text"
+                    placeholder="Escribe tu nombre"
+                    readonly
+                    x-ref="inputNombre"
+                    @touchstart="$el.removeAttribute('readonly')"
+                    @mousedown="$el.removeAttribute('readonly')"
+                    @focus="$el.removeAttribute('readonly'); if($el.value.includes('@')){$el.value='';nuevaReseña.autor='';}"
+                    @input="nuevaReseña.autor = $el.value"
+                    @blur="event.target.style.borderColor='rgba(255,255,255,.1)'"
+                    autocomplete="off"
+                    style="width:100%;background:#1a1a1a;border:1px solid rgba(255,195,0,.4);border-radius:10px;padding:10px 14px;color:#fff;font-family:Montserrat,sans-serif;font-size:13px;font-weight:600;outline:none;margin-bottom:8px;">
+            <textarea x-model="nuevaReseña.texto" placeholder="Cuéntanos tu experiencia (opcional)"
+                rows="3" style="width:100%;background:#1a1a1a;border:1px solid rgba(255,195,0,.3);border-radius:10px;padding:10px 14px;color:#fff;font-family:Montserrat,sans-serif;font-size:13px;outline:none;resize:none;" placeholder="Cuéntanos tu experiencia (opcional)"></textarea>
+            <button class="btn-enviar-reseña" @click="enviarReseña()">
+                ⭐ Publicar reseña
+            </button>
+        </div>
+
+        <!-- Lista de reseñas -->
+        <template x-for="(r, i) in reseñas.slice(0,5)" :key="i">
+            <div class="review-card">
+                <div class="review-header">
+                    <span class="review-author" x-text="r.autor"></span>
+                    <span class="review-stars" style="color:#FFC300;" x-text="'★'.repeat(r.estrellas||0)+'☆'.repeat(5-(r.estrellas||0))"></span>
+                </div>
+                <div class="review-text" x-show="r.texto" x-text="r.texto"></div>
+                <div class="review-date" x-text="new Date(r.fecha).toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})"></div>
+            </div>
+        </template>
+
+        <!-- Sin reseñas -->
+        <div x-show="reseñas.length === 0" style="text-align:center;padding:20px;color:#555;font-size:12px;font-family:Montserrat,sans-serif;">
+            <div style="font-size:2rem;margin-bottom:8px;">⭐</div>
+<span style="color:#f0e0c0;font-weight:600;">¡Sé el primero en dejar una reseña!</span>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="footer" style="color:#f0f0f0;">
+        <p class="font-semibold text-white">EL TITI Comidas Rápidas</p>
+        <p class="text-xs">Barrio Nueva Jerusalén, Bello, Antioquia</p>
+        <p class="text-xs mt-1" x-text="'Horario: ' + horarioTexto"></p>
+        <p class="marca" style="color:var(--amarillo);font-weight:700;letter-spacing:1px;">✦ KONFÍO ZINC · Todos los derechos reservados ✦</p>
+    </div>
+
+    <!-- ===== BOTÓN FLOTANTE WHATSAPP ===== -->
+    <div class="wa-float-wrap">
+        <div class="wa-ring"></div>
+        <div class="wa-ring"></div>
+        <div class="wa-ring"></div>
+        <a href="https://wa.me/573014387942" target="_blank" class="whatsapp-float" id="whatsappFloat">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+    </div>
+
+    <!-- ===== PANEL ADMINISTRADOR ===== -->
+    <div class="admin-panel" :class="{ 'open': adminMode }">
+        <div x-show="!adminAuthenticated">
+            <h3>🔐 ACCESO ADMIN</h3>
+            <div class="admin-login-extra">
+                <label>Correo</label>
+                <input type="email" x-model="adminEmail" placeholder="correo@eltiti.com" autocomplete="username" @keydown.enter="authenticateAdmin()">
+                <label>Contraseña</label>
+                <input type="password" x-model="adminPassword" placeholder="Contraseña" autocomplete="current-password" @keydown.enter="authenticateAdmin()">
+            </div>
+            <button @click="authenticateAdmin()" :disabled="loginEnProgreso">
+                <span x-text="loginEnProgreso ? 'Verificando...' : 'Entrar'"></span>
+            </button>
+        </div>
+        <div x-show="adminAuthenticated">
+            <div class="flex justify-between items-center mb-2">
+                <h3>⚙️ PANEL DE ADMIN</h3>
+                <button class="btn-danger" @click="cerrarSesionAdmin()">Salir</button>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="admin-stats">
+                <div class="admin-stat-card">
+                    <div class="num" x-text="productos.length"></div>
+                    <div class="lbl">Productos</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="num" x-text="categorias.length"></div>
+                    <div class="lbl">Categorías</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="num" x-text="productosAgotadosCount"></div>
+                    <div class="lbl">Agotados</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="num" x-text="ultimaSyncHora"></div>
+                    <div class="lbl">Última sync</div>
+                </div>
+            </div>
+            <div class="admin-sync-row">
+                <span class="sync-indicator" :class="syncStatus" style="position:static;background:none;border:none;padding:0;">
+                    <span class="dot-sync"></span>
+                </span>
+                <span x-text="syncStatus === 'connected' ? 'Firebase conectado' : (syncStatus === 'syncing' ? 'Sincronizando...' : 'Error de conexión')"></span>
+            </div>
+
+            <div class="mb-4 border-t border-gray-700 pt-3">
+                <p class="text-sm font-semibold text-gray-300 mb-1">Horario de atención</p>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label>Días (0-6)</label>
+                        <input type="text" x-model="adminHorario.dias" placeholder="Ej: 5,6,0">
+                    </div>
+                    <div>
+                        <label>Inicio (h)</label>
+                        <input type="number" x-model="adminHorario.inicio" min="0" max="23">
+                    </div>
+                    <div>
+                        <label>Fin (h)</label>
+                        <input type="number" x-model="adminHorario.fin" min="0" max="23">
+                    </div>
+                </div>
+                <button @click="guardarHorario()" class="mt-2">Guardar</button>
+            </div>
+
+            <div class="mb-4 border-t border-gray-700 pt-3">
+                <label class="text-sm font-semibold text-gray-300">Promoción</label>
+                <input type="text" x-model="promoText" placeholder="Texto de promoción">
+                <button @click="savePromo()" class="mt-1">Guardar</button>
+            </div>
+
+            <div class="mb-4 border-t border-gray-700 pt-3">
+                <p class="text-sm font-semibold text-gray-300 mb-1">Nuevo producto</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" x-model="newProduct.nombre" placeholder="Nombre">
+                    <input type="number" x-model="newProduct.precio" placeholder="Precio">
+                    <select x-model="newProduct.categoria" class="col-span-2">
+                        <template x-for="cat in categorias" :key="cat">
+                            <option :value="cat" x-text="cat"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="photo-upload-row">
+                    <label class="upload-btn">
+                        <i class="fas fa-camera"></i> Seleccionar imagen
+                        <input type="file" accept="image/*" @change="subirFoto($event, 'nuevo')">
+                    </label>
+                    <img :src="previewNuevo || newProduct.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                </div>
+                <input type="text" x-model="newProduct.imagen" placeholder="assets/productos/nombre-archivo.webp">
+                <p class="img-info-msg">📦 Para agregar nuevas imágenes al catálogo deben subirse al repositorio GitHub dentro de <b>assets/productos</b>. La vista previa es solo temporal en este dispositivo.</p>
+                <button @click="addProduct()" class="mt-1">➕ Agregar</button>
+            </div>
+
+            <div class="mt-4">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-sm font-semibold text-gray-300" style="margin:0;">Productos</p>
+                </div>
+                <div class="admin-search-wrap">
+                    <input type="text" x-model="adminBusqueda" placeholder="🔎 Buscar producto...">
+                </div>
+                <template x-for="(p, idx) in productosAdminFiltrados" :key="p.id">
+                    <div class="product-admin-item" style="flex-direction:column;align-items:stretch;gap:8px;padding:10px 0;">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="font-size:1.1rem;" x-text="p.emoji || '🍔'"></span>
+                            <input type="text" x-model="p.nombre"
+                                @change="actualizarCampoProducto(p, 'nombre', p.nombre)"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:#fff;font-family:Montserrat,sans-serif;font-size:12px;"
+                                placeholder="Nombre del producto">
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;">Categoría:</span>
+                            <select x-model="p.categoria" @change="actualizarCampoProducto(p, 'categoria', p.categoria)"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:#fff;font-family:Montserrat,sans-serif;font-size:12px;">
+                                <template x-for="cat in categorias" :key="cat">
+                                    <option :value="cat" x-text="cat"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;">$ Precio:</span>
+                            <input type="number" x-model="p.precio_editable"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:var(--amarillo);font-family:Montserrat,sans-serif;font-size:13px;font-weight:700;"
+                                placeholder="Precio">
+                            <button @click="guardarPrecio(p)"
+                                style="padding:5px 10px;background:var(--amarillo);color:#000;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:Montserrat,sans-serif;white-space:nowrap;">
+                                <i class="fas fa-save"></i> OK
+                            </button>
+                        </div>
+                        <div class="photo-upload-row">
+                            <label class="upload-btn">
+                                <i class="fas fa-camera"></i> Seleccionar imagen
+                                <input type="file" accept="image/*" @change="subirFoto($event, p)">
+                            </label>
+                            <img :src="previewPorId[p.id] || p.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;">Ruta:</span>
+                            <input type="text" x-model="p.imagen"
+                                @change="actualizarCampoProducto(p, 'imagen', p.imagen)"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:#fff;font-family:Montserrat,sans-serif;font-size:11px;"
+                                placeholder="assets/productos/nombre-archivo.webp">
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <button @click="toggleAgotado(p)"
+                                :style="p.agotado ? 'background:#ef4444;' : 'background:#22c55e;'"
+                                style="padding:4px 12px;border:none;border-radius:20px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:Montserrat,sans-serif;">
+                                <span x-text="p.agotado ? '❌ AGOTADO' : '✅ DISPONIBLE'"></span>
+                            </button>
+                            <button @click="deleteProduct(p.id)"
+                                style="padding:4px 10px;background:#7f1d1d;border:none;border-radius:8px;color:#fca5a5;font-size:11px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </template>
+                <div x-show="productosAdminFiltrados.length === 0" style="text-align:center;padding:14px;color:#999;font-size:12px;">
+                    Sin resultados
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ===== MODAL INSTALACIÓN ===== -->
+    <div id="installModal" x-show="installModalOpen" x-cloak style="position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;" @click.self="installModalOpen=false">
+        <div class="modal-content" style="max-width:360px;width:92%;max-height:85vh;overflow-y:auto;">
+            <span class="close-button" @click="installModalOpen=false">&times;</span>
+            <div style="text-align:center;padding:8px 0 16px;">
+                <div style="font-size:3rem;margin-bottom:6px;">📲</div>
+                <h3 style="color:var(--amarillo);font-weight:900;font-size:20px;letter-spacing:1px;margin-bottom:6px;">¡Instala la App!</h3>
+                <p style="font-size:12px;color:#d0d0d0;line-height:1.5;">Accede al menú de <b style="color:#fff;">EL TITI</b> directamente<br>desde la pantalla de tu celular</p>
+            </div>
+
+            <!-- Tabs -->
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+                <button @click="installTab='android'" :style="installTab==='android'?'background:var(--amarillo);color:#000;':'background:rgba(255,255,255,.1);color:#fff;'" style="flex:1;padding:8px;border-radius:8px;border:none;font-weight:700;font-size:12px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                    <i class="fab fa-android"></i> Android
+                </button>
+                <button @click="installTab='ios'" :style="installTab==='ios'?'background:var(--amarillo);color:#000;':'background:rgba(255,255,255,.1);color:#fff;'" style="flex:1;padding:8px;border-radius:8px;border:none;font-weight:700;font-size:12px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                    <i class="fab fa-apple"></i> iPhone
+                </button>
+            </div>
+
+            <!-- Android steps -->
+            <div x-show="installTab==='android'">
+                <div style="margin-bottom:10px;">
+                    <button @click="deferredPrompt ? instalarPWA() : mostrarToast('Abre en Chrome → menú ⋮ → Añadir a pantalla de inicio')"
+                        style="width:100%;padding:14px;background:linear-gradient(135deg,#FFC300,#ff8c00);color:#000;border:none;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;font-family:Montserrat,sans-serif;box-shadow:0 4px 20px rgba(255,195,0,0.5);letter-spacing:0.5px;">
+                        <i class="fas fa-mobile-alt" style="margin-right:8px;"></i> ¡Instalar App Gratis!
+                    </button>
+                </div>
+                <div style="text-align:left;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">1</div>
+                        <div><b style="font-size:13px;">Abre en Chrome</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Asegúrate de usar Google Chrome en tu Android.</p></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">2</div>
+                        <div><b style="font-size:13px;">Menú ⋮</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Toca los tres puntos en la esquina superior derecha.</p></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">3</div>
+                        <div><b style="font-size:13px;">Añadir a pantalla de inicio</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Selecciona esa opción y confirma.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- iOS steps -->
+            <div x-show="installTab==='ios'">
+                <div style="text-align:left;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">1</div>
+                        <div><b style="font-size:13px;">Abre en Safari</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Solo funciona en el navegador Safari de Apple.</p></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">2</div>
+                        <div><b style="font-size:13px;">Botón Compartir ⬆</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Toca el ícono de compartir en la barra inferior.</p></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">3</div>
+                        <div><b style="font-size:13px;">Añadir a pantalla de inicio</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Busca esa opción en el menú que aparece.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="closeInstallModalBtn2" @click="installModalOpen=false" style="width:100%;margin-top:14px;padding:10px;background:transparent;border:1px solid rgba(255,255,255,.2);border-radius:20px;color:#c0c0c0;font-family:Montserrat,sans-serif;font-size:12px;cursor:pointer;">Cerrar</button>
+        </div>
+    </div>
+
+
+
+    <!-- ══ CARRITO FAB ══ -->
+    <div style="position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateX(-145px);z-index:49;">
+        <button class="cart-fab" @click="carritoOpen = true"
+            style="position:relative;opacity:1"
+            :style="totalItems > 0 ? 'transform:scale(1.08);box-shadow:0 6px 28px rgba(255,195,0,.8)' : ''">
+            🛒
+            <span class="cart-badge" x-show="totalItems > 0" x-text="totalItems"></span>
+        </button>
+    </div>
+
+    <!-- ══ MODAL CARRITO ══ -->
+    <div class="cart-overlay" x-show="carritoOpen" x-cloak
+        :style="carritoOpen ? 'display:flex' : 'display:none'"
+        @click.self="carritoOpen=false">
+        <div class="cart-sheet">
+            <div class="cart-handle"></div>
+            <div class="cart-header">
+                <span class="cart-title">🛒 MI PEDIDO</span>
+                <span style="font-size:12px;color:#888;font-family:Montserrat,sans-serif;"
+                    x-text="totalItems + ' producto' + (totalItems !== 1 ? 's' : '')"></span>
+            </div>
+
+            <!-- Carrito vacío -->
+            <div class="cart-empty" x-show="carrito.length === 0">
+                <div class="cart-empty-icon">🛒</div>
+                <p>Tu pedido está vacío.<br>¡Agrega algo del menú!</p>
+            </div>
+
+            <!-- Items del carrito -->
+            <template x-for="item in carrito" :key="item.id">
+                <div class="cart-item">
+                    <div class="cart-item-emoji" x-text="item.emoji"></div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-name" x-text="item.nombre"></div>
+                        <div class="cart-item-price"
+                            x-text="'$' + (item.precio * item.cantidad).toLocaleString('es-CO')"></div>
+                    </div>
+                    <div class="cart-qty">
+                        <button class="qty-btn qty-minus" @click="quitarUno(item.id)">−</button>
+                        <span class="qty-num" x-text="item.cantidad"></span>
+                        <button class="qty-btn qty-plus" @click="item.cantidad++">+</button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Total -->
+            <div class="cart-total-row" x-show="carrito.length > 0">
+                <span class="cart-total-label">TOTAL DEL PEDIDO</span>
+                <span class="cart-total-val" x-text="'$' + totalPrecio.toLocaleString('es-CO')"></span>
+            </div>
+
+            <!-- Acciones -->
+            <div class="cart-actions" x-show="carrito.length > 0">
+                <button class="btn-enviar-pedido" @click="enviarPedido()">
+                    <i class="fab fa-whatsapp" style="margin-right:8px;font-size:18px;"></i>
+                    Enviar pedido por WhatsApp
+                </button>
+                <button class="btn-vaciar" @click="vaciarCarrito()">🗑️ Vaciar carrito</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL QR GRANDE ===== -->
+    <div x-show="qrModalOpen" x-cloak
+        :style="qrModalOpen ? 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);' : 'display:none'"
+        @click.self="qrModalOpen=false">
+        <div style="background:#111;border:2px solid var(--amarillo);border-radius:24px;padding:28px 24px;text-align:center;max-width:320px;width:90%;box-shadow:0 0 60px rgba(255,195,0,0.2);">
+            <h3 style="color:var(--amarillo);font-weight:900;font-size:18px;letter-spacing:2px;margin-bottom:6px;">📲 COMPARTE TU TARJETA</h3>
+            <p style="font-size:12px;color:#c0c0c0;margin-bottom:18px;">Escanea el QR con la cámara de tu teléfono</p>
+            <div style="display:inline-block;padding:10px;background:#fff;border-radius:16px;border:3px solid var(--amarillo);box-shadow:0 0 30px rgba(255,195,0,0.3);position:relative;">
+                <img id="qrImgModal" src="" alt="QR Code"
+                    style="width:220px;height:220px;border-radius:10px;display:block;">
+                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;background:#fff;border-radius:50%;border:2px solid var(--amarillo);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.3);">
+                    <img src="assets/logo/logo-el-titi.png" alt="logo" style="width:42px;height:42px;object-fit:cover;border-radius:50%;" loading="lazy" decoding="async">
+                </div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                <button @click="copiarEnlace()" style="padding:9px 20px;background:var(--amarillo);color:#000;border:none;border-radius:20px;font-weight:800;font-size:13px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                    <i class="fas fa-copy"></i> Copiar enlace
+                </button>
+                <button @click="qrModalOpen=false" style="padding:9px 20px;background:transparent;border:1px solid rgba(255,255,255,0.2);color:#c0c0c0;border-radius:20px;font-size:13px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+</div>
+
+<!-- ===== SCRIPTS FUERA DE ALPINE PARA GARANTIZAR FUNCIONAMIENTO ===== -->
+<script>
+    // ═══════════════════════════════════════════════════════════════
+    //  CONFIGURACIÓN GENERAL
+    // ═══════════════════════════════════════════════════════════════
+    const STORAGE_KEY_PRODUCTOS = 'eltiti_productos_cache'; // SOLO caché offline
+    const STORAGE_KEY_HORARIO   = 'eltiti_horario';
+    const STORAGE_KEY_PROMO     = 'eltiti_promo';
+
+    const CATEGORIAS = ['Hamburguesas', 'Salchipapas', 'Chuzos', 'Bebidas', 'Adicionales'];
+    const EMOJIS_CATEGORIA = {
+        'Hamburguesas': '🍔',
+        'Salchipapas':  '🍟',
+        'Chuzos':       '🌭',
+        'Bebidas':      '🥤',
+        'Adicionales':  '➕'
+    };
+
+    // Catálogo inicial — solo se usa una vez, si Firebase no tiene productos aún.
+    const productosIniciales = {
+        'seed-hb-simple':  { nombre: 'Hamburguesa (Simple)',  precio: 7000,  categoria: 'Hamburguesas', imagen: 'assets/productos/hamburguesa-simple.webp', agotado: false },
+        'seed-hb-doble':   { nombre: 'Hamburguesa (Doble)',   precio: 10000, categoria: 'Hamburguesas', imagen: 'assets/productos/hamburguesa-doble.webp', agotado: false },
+        'seed-hb-triple':  { nombre: 'Hamburguesa (Triple)',  precio: 13000, categoria: 'Hamburguesas', imagen: 'assets/productos/hamburguesa-triple.webp', agotado: false },
+        'seed-hb-especial':{ nombre: 'Hamburguesa (Especial)',precio: 18000, categoria: 'Hamburguesas', imagen: 'assets/productos/hamburguesa-especial.webp', agotado: false },
+        'seed-hb-x':       { nombre: 'Hamburguesa (X)',       precio: 15000, categoria: 'Hamburguesas', imagen: 'assets/productos/hamburguesa-x.webp', agotado: false },
+        'seed-sp-simple':  { nombre: 'Salchipapa (Simple)',   precio: 5000,  categoria: 'Salchipapas',  imagen: 'assets/productos/salchipapa-simple.webp', agotado: false },
+        'seed-sp-doble':   { nombre: 'Salchipapa (Doble)',    precio: 7000,  categoria: 'Salchipapas',  imagen: 'assets/productos/salchipapa-doble.webp', agotado: false },
+        'seed-sp-triple':  { nombre: 'Salchipapa (Triple)',   precio: 10000, categoria: 'Salchipapas',  imagen: 'assets/productos/salchipapa-triple.webp', agotado: false },
+        'seed-sp-especial':{ nombre: 'Salchipapa (Especial)', precio: 13000, categoria: 'Salchipapas',  imagen: 'assets/productos/salchipapa-especial.webp', agotado: false },
+        'seed-sp-x':       { nombre: 'Salchipapa (X)',        precio: 15000, categoria: 'Salchipapas',  imagen: 'assets/productos/salchipapa-x.webp', agotado: false },
+        'seed-choripapa':  { nombre: 'Choripapa',             precio: 12000, categoria: 'Salchipapas',  imagen: 'assets/productos/choripapa.webp', agotado: false },
+        'seed-chuzo-pollo':{ nombre: 'Chuzo de Pollo',        precio: 15000, categoria: 'Chuzos',       imagen: 'assets/productos/chuzo-pollo.webp', agotado: false },
+        'seed-butifarra': { nombre: 'Butifarra',              precio: 800,   categoria: 'Adicionales',  imagen: 'assets/productos/butifarra.webp', agotado: false },
+        'seed-empanadas': { nombre: 'Empanadas (6x)',         precio: 2000,  categoria: 'Adicionales',  imagen: 'assets/productos/empanadas.webp', agotado: false }
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    //  FIREBASE — APP / AUTH / REALTIME DATABASE / STORAGE
+    // ═══════════════════════════════════════════════════════════════
+    const firebaseConfig = {
+        apiKey: "AIzaSyDHWE3OJMspi_z0CKPv8mjvjI7igum98rs",
+        authDomain: "el-titi-menu.firebaseapp.com",
+        databaseURL: "https://el-titi-menu-default-rtdb.firebaseio.com",
+        projectId: "el-titi-menu",
+        storageBucket: "el-titi-menu.firebasestorage.app",
+        messagingSenderId: "903648110789",
+        appId: "1:903648110789:web:6ac58748862dfeb5a568ac"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const fbAuth    = firebase.auth();
+    const fbDB      = firebase.database();
+
+    const refProductos     = fbDB.ref('menu/productos');
+    const refPromo         = fbDB.ref('menu/promo');
+    const refHorario       = fbDB.ref('menu/horario');
+    const refResenas       = fbDB.ref('menu/reseñas');
+    const refBackup        = fbDB.ref('menu_backup');
+    const refMeta          = fbDB.ref('menu/meta');
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ESTADO GLOBAL DE SINCRONIZACIÓN (Alpine Store)
+    //  🟢 connected · 🟡 syncing · 🔴 error
+    // ═══════════════════════════════════════════════════════════════
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('sync', { status: 'syncing', ultimoGuardado: null });
+    });
+
+    function setSyncStatus(status) {
+        const store = Alpine.store('sync');
+        if (store) store.status = status;
+    }
+    function marcarUltimoGuardado() {
+        const ts = Date.now();
+        const store = Alpine.store('sync');
+        if (store) store.ultimoGuardado = ts;
+        try { localStorage.setItem('eltiti_ultimo_guardado', String(ts)); } catch(e) {}
+        refMeta.child('ultimoGuardado').set(ts).catch(() => {});
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CACHÉ LOCAL — ÚNICAMENTE PARA USO OFFLINE
+    // ═══════════════════════════════════════════════════════════════
+    function cargarProductosCache() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY_PRODUCTOS);
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) { return []; }
+    }
+    function guardarProductosCache(productosArr) {
+        try { localStorage.setItem(STORAGE_KEY_PRODUCTOS, JSON.stringify(productosArr)); } catch (e) {}
+    }
+
+    function productosObjToArray(obj) {
+        if (!obj || typeof obj !== 'object') return [];
+        return Object.keys(obj)
+            .filter(id => obj[id])
+            .map(id => ({
+                id,
+                nombre: obj[id].nombre || '',
+                precio: obj[id].precio || 0,
+                imagen: obj[id].imagen || '',
+                categoria: obj[id].categoria || 'Adicionales',
+                agotado: !!obj[id].agotado
+            }));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  RESPALDO — menu_backup
+    // ═══════════════════════════════════════════════════════════════
+    async function crearBackup(productosData, motivo) {
+        try {
+            const ts = Date.now();
+            await refBackup.child(String(ts)).set({
+                productos: productosData,
+                motivo: motivo || 'manual',
+                fecha: new Date(ts).toISOString()
+            });
+            return { success: true, timestamp: ts };
+        } catch (e) {
+            console.warn('No se pudo crear respaldo:', e.message);
+            return { success: false, error: e.message };
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SINCRONIZACIÓN EN TIEMPO REAL — onValue()
+    //  Sin escrituras destructivas: solo push() / update() / remove()
+    // ═══════════════════════════════════════════════════════════════
+    let migracionEnProceso = false;
+
+    function escucharProductos(onUpdate) {
+        refProductos.on('value', (snapshot) => {
+            const data = snapshot.val();
+
+            // 1) Base de datos vacía → sembrar catálogo inicial (solo la primera vez)
+            if (data === null) {
+                if (migracionEnProceso) return;
+                migracionEnProceso = true;
+                refProductos.set(productosIniciales)
+                    .then(() => { migracionEnProceso = false; })
+                    .catch(() => { migracionEnProceso = false; setSyncStatus('error'); });
+                return;
+            }
+
+            // 2) Formato antiguo (array) → migrar a objeto indexado por id, con respaldo previo
+            if (Array.isArray(data)) {
+                if (migracionEnProceso) return;
+                migracionEnProceso = true;
+                crearBackup(data, 'migracion_formato_legacy').finally(() => {
+                    const migrado = {};
+                    data.forEach((p) => {
+                        if (!p) return;
+                        const idValido = p.id && typeof p.id === 'string' && !/^\d+$/.test(String(p.id));
+                        const id = idValido ? String(p.id) : crypto.randomUUID();
+                        migrado[id] = {
+                            nombre: p.nombre || '',
+                            precio: p.precio || 0,
+                            imagen: p.imagen || '',
+                            categoria: CATEGORIAS.includes(p.categoria) ? p.categoria : 'Adicionales',
+                            agotado: !!p.agotado
+                        };
+                    });
+                    refProductos.set(migrado)
+                        .then(() => { migracionEnProceso = false; })
+                        .catch(() => { migracionEnProceso = false; setSyncStatus('error'); });
+                });
+                return;
+            }
+
+            // 3) Caso normal: objeto { id: {...} }
+            const arr = productosObjToArray(data);
+            guardarProductosCache(arr);
+            onUpdate(arr);
+            setSyncStatus('connected');
+        }, (error) => {
+            console.error('Error de sincronización Firebase:', error);
+            setSyncStatus('error');
+            const cache = cargarProductosCache();
+            if (cache.length) onUpdate(cache);
+        });
+
+        // Mientras se establece la primera conexión
+        setSyncStatus('syncing');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CRUD DE PRODUCTOS — push() / update() / remove()
+    // ═══════════════════════════════════════════════════════════════
+    async function crearProductoFirebase(id, datos) {
+        try {
+            setSyncStatus('syncing');
+            await refProductos.child(id).set(datos);
+            marcarUltimoGuardado();
+            setSyncStatus('connected');
+            return { success: true };
+        } catch (e) {
+            setSyncStatus('error');
+            return { success: false, error: e.message };
+        }
+    }
+
+    async function actualizarProductoFirebase(id, cambios) {
+        try {
+            setSyncStatus('syncing');
+            await refProductos.child(id).update(cambios);
+            marcarUltimoGuardado();
+            setSyncStatus('connected');
+            return { success: true };
+        } catch (e) {
+            setSyncStatus('error');
+            return { success: false, error: e.message };
+        }
+    }
+
+    async function eliminarProductoFirebase(id, productoActual) {
+        try {
+            setSyncStatus('syncing');
+            if (productoActual) await crearBackup({ [id]: productoActual }, 'eliminacion_producto');
+            await refProductos.child(id).remove();
+            marcarUltimoGuardado();
+            setSyncStatus('connected');
+            return { success: true };
+        } catch (e) {
+            setSyncStatus('error');
+            return { success: false, error: e.message };
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  AUTENTICACIÓN — FIREBASE AUTHENTICATION
+    // ═══════════════════════════════════════════════════════════════
+    async function loginFirebaseAdmin(email, password) {
+        try {
+            await fbAuth.signInWithEmailAndPassword(email, password);
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.code || e.message };
+        }
+    }
+    function logoutFirebaseAdmin() { return fbAuth.signOut(); }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  PROMO / HORARIO — sincronizados vía RTDB (set en nodo propio)
+    // ═══════════════════════════════════════════════════════════════
+    async function guardarPromoFirebase(promo) {
+        try { setSyncStatus('syncing'); await refPromo.set(promo); marcarUltimoGuardado(); setSyncStatus('connected'); return true; }
+        catch (e) { setSyncStatus('error'); return false; }
+    }
+    async function guardarHorarioFirebase(h) {
+        try { setSyncStatus('syncing'); await refHorario.set(h); marcarUltimoGuardado(); setSyncStatus('connected'); return true; }
+        catch (e) { setSyncStatus('error'); return false; }
+    }
+
+    // Inicialización cuando el DOM esté listo (efectos visuales no críticos)
+    document.addEventListener('DOMContentLoaded', function() {
+        const whatsappBtn = document.getElementById('whatsappFloat');
+        if (whatsappBtn) {
+            whatsappBtn.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        }
+    });
+</script>
+
+<!-- ===== DEFINICIÓN DE APP DATA (Alpine) ===== -->
+<script>
+    // appData() centralizado en Alpine.data
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('appData', function() {
+            return {
+                // ── Estado base ──
+                isOpen: false,
+                productos: [],
+                promoText: '🔥 PROMO DEL FIN DE SEMANA: 2x1 en Hamburguesas',
+
+                // ── Categorías y búsqueda ──
+                categorias: CATEGORIAS,
+                emojisCategoria: EMOJIS_CATEGORIA,
+                busqueda: '',
+                adminBusqueda: '',
+
+                // ── Administración ──
+                adminMode: false,
+                adminAuthenticated: false,
+                adminEmail: '',
+                adminPassword: '',
+                loginEnProgreso: false,
+                newProduct: { nombre: '', precio: '', imagen: '', categoria: CATEGORIAS[0] },
+                previewNuevo: '',
+                previewPorId: {},
+
+                logoPressCount: 0,
+                logoPressTimer: null,
+                whatsapp: '573014387942',
+                telefono: '3014387942',
+                adminHorario: { dias: '5,6,0', inicio: 18, fin: 2 },
+                horarioTexto: 'Viernes – Domingo · 6:00 PM a 2:00 AM',
+                installModalOpen: false,
+                installTab: 'android',
+                deferredPrompt: null,
+                qrModalOpen: false,
+
+                // ── Reseñas ──
+                reseñas: [],
+                nuevaReseña: { autor: '', texto: '', estrellas: 0 },
+                reseñasOpen: false,
+
+                // ── Carrito ──
+                carritoOpen: false,
+                carrito: [],
+
+                // ═══════════════ GETTERS ═══════════════
+                get syncStatus() {
+                    const store = Alpine.store('sync');
+                    return store ? store.status : 'syncing';
+                },
+                get ultimaSyncHora() {
+                    const store = Alpine.store('sync');
+                    const ts = store ? store.ultimoGuardado : null;
+                    if (!ts) return '—';
+                    return new Date(ts).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+                },
+                get productosFiltrados() {
+                    const q = this.busqueda.trim().toLowerCase();
+                    if (!q) return this.productos;
+                    return this.productos.filter(p => p.nombre.toLowerCase().includes(q));
+                },
+                get categoriasConProductos() {
+                    return this.categorias.map(cat => {
+                        const productos = this.productosFiltrados.filter(p => p.categoria === cat);
+                        return { nombre: cat, emoji: this.emojisCategoria[cat] || '🍽️', productos, count: productos.length };
+                    });
+                },
+                get productosAdminFiltrados() {
+                    const q = this.adminBusqueda.trim().toLowerCase();
+                    if (!q) return this.productos;
+                    return this.productos.filter(p => p.nombre.toLowerCase().includes(q));
+                },
+                get productosAgotadosCount() {
+                    return this.productos.filter(p => p.agotado).length;
+                },
+                get promedioEstrellas() {
+                    if (!this.reseñas.length) return 0;
+                    return (this.reseñas.reduce((s, r) => s + (r.estrellas || 0), 0) / this.reseñas.length).toFixed(1);
+                },
+                get estrellasTexto() {
+                    const n = Math.round(this.promedioEstrellas);
+                    return '★'.repeat(n) + '☆'.repeat(5 - n);
+                },
+                get totalItems() { return this.carrito.reduce((s, i) => s + i.cantidad, 0); },
+                get totalPrecio() { return this.carrito.reduce((s, i) => s + i.precio * i.cantidad, 0); },
+
+                // ═══════════════ INICIALIZACIÓN ═══════════════
+                initApp() {
+                    // 1. Cargar caché local (uso inmediato / modo offline)
+                    const cache = cargarProductosCache();
+                    if (cache.length) {
+                        this.productos = cache.map(p => ({ ...p, precio_editable: p.precio }));
+                    }
+
+                    // 2. Sincronización en tiempo real con Firebase (onValue)
+                    escucharProductos((arr) => {
+                        this.productos = arr.map(p => ({ ...p, precio_editable: p.precio }));
+                    });
+
+                    // 3. Estado de autenticación del administrador
+                    fbAuth.onAuthStateChanged((user) => {
+                        this.adminAuthenticated = !!user;
+                    });
+
+                    // 4. Horario de atención
+                    this.cargarHorario();
+                    this.actualizarEstado();
+                    setInterval(() => this.actualizarEstado(), 60000);
+
+                    // 5. Promoción (caché + tiempo real)
+                    const promoCache = localStorage.getItem(STORAGE_KEY_PROMO);
+                    if (promoCache) this.promoText = promoCache;
+                    refPromo.on('value', (snap) => {
+                        const val = snap.val();
+                        if (typeof val === 'string' && val) {
+                            this.promoText = val;
+                            try { localStorage.setItem(STORAGE_KEY_PROMO, val); } catch (e) {}
+                        }
+                    });
+
+                    // 6. Reseñas en tiempo real (push, nunca sobrescritura total)
+                    refResenas.on('value', (snap) => {
+                        const data = snap.val();
+                        this.reseñas = data
+                            ? Object.values(data).filter(Boolean).sort((a, b) => (b.fecha || 0) - (a.fecha || 0))
+                            : [];
+                    });
+
+                    // Limpiar autofill del campo nombre de reseña
+                    setTimeout(() => {
+                        const el = document.getElementById('campoNombreReseña');
+                        if (el && el.value.includes('@')) el.value = '';
+                    }, 800);
+
+                    // 7. Último guardado (panel admin)
+                    refMeta.child('ultimoGuardado').on('value', (snap) => {
+                        const ts = snap.val();
+                        const store = Alpine.store('sync');
+                        if (ts && store) store.ultimoGuardado = ts;
+                    });
+
+                    // 8. Evento de instalación PWA
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        this.deferredPrompt = e;
+                    });
+                },
+
+                // ── Tap logo x5 activa Admin ──
+                tapLogo() {
+                    this.logoPressCount++;
+                    clearTimeout(this.logoPressTimer);
+                    this.logoPressTimer = setTimeout(() => { this.logoPressCount = 0; }, 5000);
+                    if (this.logoPressCount >= 5) {
+                        this.logoPressCount = 0;
+                        this.adminMode = true;
+                    }
+                },
+
+                // ── Instalar PWA ──
+                instalarPWA() {
+                    if (this.deferredPrompt) {
+                        this.deferredPrompt.prompt();
+                        this.deferredPrompt = null;
+                        this.installModalOpen = false;
+                    }
+                },
+
+                // ═══════════════ HORARIO ═══════════════
+                cargarHorario() {
+                    const stored = localStorage.getItem(STORAGE_KEY_HORARIO);
+                    if (stored) {
+                        try {
+                            this.adminHorario = JSON.parse(stored);
+                            this.actualizarTextoHorario();
+                            return;
+                        } catch (e) {}
+                    }
+                    this.actualizarTextoHorario();
+                },
+                guardarHorario() {
+                    let dias = this.adminHorario.dias.split(',').map(Number).filter(d => !isNaN(d) && d >= 0 && d <= 6);
+                    if (dias.length === 0) {
+                        this.mostrarToast('Debe ingresar al menos un día válido');
+                        return;
+                    }
+                    this.adminHorario.dias = dias.join(',');
+                    localStorage.setItem(STORAGE_KEY_HORARIO, JSON.stringify(this.adminHorario));
+                    guardarHorarioFirebase(this.adminHorario);
+                    this.actualizarTextoHorario();
+                    this.actualizarEstado();
+                    this.mostrarToast('Horario guardado');
+                },
+                actualizarTextoHorario() {
+                    const dias = this.adminHorario.dias.split(',').map(Number);
+                    let nombresDias = dias.map(d => {
+                        if (d === 0) return 'Domingo';
+                        if (d === 1) return 'Lunes';
+                        if (d === 2) return 'Martes';
+                        if (d === 3) return 'Miércoles';
+                        if (d === 4) return 'Jueves';
+                        if (d === 5) return 'Viernes';
+                        if (d === 6) return 'Sábado';
+                        return '';
+                    });
+                    const inicio = this.adminHorario.inicio;
+                    const fin = this.adminHorario.fin;
+                    const formatoHora = (h) => {
+                        if (h === 0) return '12:00 AM';
+                        if (h < 12) return h + ':00 AM';
+                        if (h === 12) return '12:00 PM';
+                        return (h - 12) + ':00 PM';
+                    };
+                    this.horarioTexto = nombresDias.join(' – ') + ' · ' + formatoHora(inicio) + ' a ' + formatoHora(fin);
+                },
+                actualizarEstado() {
+                    const ahora = new Date();
+                    const dia = ahora.getDay();
+                    const hora = ahora.getHours();
+                    const minutos = ahora.getMinutes();
+                    const horaDecimal = hora + minutos / 60;
+
+                    const diasAbiertos = this.adminHorario.dias.split(',').map(Number);
+                    const inicio = parseInt(this.adminHorario.inicio);
+                    let fin = parseInt(this.adminHorario.fin);
+
+                    let abierto = false;
+                    if (diasAbiertos.includes(dia)) {
+                        if (fin < inicio) {
+                            if (horaDecimal >= inicio && horaDecimal < 24) abierto = true;
+                            else if (horaDecimal >= 0 && horaDecimal < fin) abierto = true;
+                        } else {
+                            if (horaDecimal >= inicio && horaDecimal < fin) abierto = true;
+                        }
+                    }
+                    this.isOpen = abierto;
+                },
+
+                // ═══════════════ QR / COMPARTIR / CONTACTO ═══════════════
+                abrirQR() {
+                    const img = document.getElementById('qrImgModal');
+                    if (img) {
+                        let url = window.location.href;
+                        if (url.startsWith('file://')) url = 'https://wa.me/573014387942';
+                        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&color=800000&bgcolor=ffffff&data=${encodeURIComponent(url)}`;
+                        img.onerror = () => { img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent('https://wa.me/573014387942')}`; };
+                    }
+                    this.qrModalOpen = true;
+                },
+                copiarEnlace() {
+                    const url = window.location.href.startsWith('file://') ? 'https://wa.me/573014387942' : window.location.href;
+                    navigator.clipboard.writeText(url)
+                        .then(() => this.mostrarToast('✅ Enlace copiado'))
+                        .catch(() => this.mostrarToast('No se pudo copiar'));
+                },
+                shareCard() {
+                    const url = window.location.href;
+                    if (navigator.share) {
+                        navigator.share({ title: 'EL TITI', text: '¡Pide tu comida favorita!', url });
+                    } else {
+                        this.mostrarToast('Comparte este enlace: ' + url);
+                    }
+                },
+                saveContact() {
+                    const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:EL TITI Comidas Rápidas\nTEL:${this.telefono}\nADR:Barrio Nueva Jerusalén, Bello, Antioquia\nURL:${window.location.href}\nEND:VCARD`;
+                    const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'EL_TITI.vcf';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
+                // ═══════════════ CARRITO ═══════════════
+                agregarAlCarrito(p) {
+                    const idx = this.carrito.findIndex(i => i.id === p.id);
+                    if (idx >= 0) { this.carrito[idx].cantidad++; }
+                    else { this.carrito.push({ id: p.id, nombre: p.nombre, precio: p.precio, emoji: p.emoji || '🍔', cantidad: 1 }); }
+                    this.mostrarToast('🛒 ' + p.nombre + ' agregado');
+                },
+                quitarUno(id) {
+                    const idx = this.carrito.findIndex(i => i.id === id);
+                    if (idx < 0) return;
+                    if (this.carrito[idx].cantidad > 1) { this.carrito[idx].cantidad--; }
+                    else { this.carrito.splice(idx, 1); }
+                },
+                vaciarCarrito() { if (confirm('¿Vaciar el carrito?')) this.carrito = []; },
+                enviarPedido() {
+                    if (!this.carrito.length) return;
+                    let msg = '🍔 *PEDIDO - EL TITI Comidas Rápidas*\n━━━━━━━━━━━━━━━━━━━━\n';
+                    this.carrito.forEach(i => {
+                        msg += i.emoji + ' *' + i.nombre + '*\n   Cantidad: ' + i.cantidad + '\n   Precio: $' + (i.precio * i.cantidad).toLocaleString('es-CO') + '\n\n';
+                    });
+                    msg += '━━━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $' + this.totalPrecio.toLocaleString('es-CO') + '*\n\n📍 Por favor confirma tu dirección.';
+                    window.location.href = 'whatsapp://send?phone=57' + this.telefono + '&text=' + encodeURIComponent(msg);
+                    this.carritoOpen = false;
+                },
+
+                // ═══════════════ RESEÑAS (push - tiempo real) ═══════════════
+                async enviarReseña() {
+                    if (this.nuevaReseña.autor.includes('@')) { this.nuevaReseña.autor = ''; }
+                    const inputEl = document.getElementById('campoNombreReseña');
+                    if (inputEl && inputEl.value && !inputEl.value.includes('@')) {
+                        this.nuevaReseña.autor = inputEl.value;
+                    }
+                    if (!this.nuevaReseña.autor.trim()) { this.mostrarToast('⚠️ Escribe tu nombre'); return; }
+                    if (!this.nuevaReseña.estrellas) { this.mostrarToast('⚠️ Selecciona las estrellas'); return; }
+                    const r = {
+                        autor: this.nuevaReseña.autor.trim(),
+                        texto: this.nuevaReseña.texto.trim(),
+                        estrellas: this.nuevaReseña.estrellas,
+                        fecha: Date.now()
+                    };
+                    try {
+                        await refResenas.push(r);
+                        this.nuevaReseña = { autor: '', texto: '', estrellas: 0 };
+                        this.mostrarToast('⭐ ¡Gracias por tu reseña!');
+                    } catch (e) { this.mostrarToast('⚠️ Error al guardar'); }
+                },
+
+                // ═══════════════ PRODUCTOS — push() / update() / remove() ═══════════════
+                toggleAgotado(p) {
+                    p.agotado = !p.agotado;
+                    actualizarProductoFirebase(p.id, { agotado: p.agotado }).then(res => {
+                        this.mostrarToast(res.success ? (p.agotado ? '❌ Marcado AGOTADO' : '✅ Marcado DISPONIBLE') : '⚠️ Error: ' + res.error);
+                    });
+                },
+                deleteProduct(id) {
+                    if (!confirm('¿Eliminar este producto?')) return;
+                    const producto = this.productos.find(p => p.id === id);
+                    const datos = producto ? {
+                        nombre: producto.nombre, precio: producto.precio, imagen: producto.imagen,
+                        categoria: producto.categoria, agotado: producto.agotado
+                    } : null;
+                    eliminarProductoFirebase(id, datos).then(res => {
+                        this.mostrarToast(res.success ? '🗑️ Producto eliminado' : '⚠️ Error: ' + res.error);
+                    });
+                },
+                async addProduct() {
+                    if (!this.newProduct.nombre || !this.newProduct.precio) {
+                        this.mostrarToast('Nombre y precio requeridos');
+                        return;
+                    }
+                    const id = crypto.randomUUID();
+                    const datos = {
+                        nombre: this.newProduct.nombre.trim(),
+                        precio: parseInt(this.newProduct.precio),
+                        imagen: this.newProduct.imagen || '',
+                        categoria: CATEGORIAS.includes(this.newProduct.categoria) ? this.newProduct.categoria : CATEGORIAS[0],
+                        agotado: false
+                    };
+                    const res = await crearProductoFirebase(id, datos);
+                    if (res.success) {
+                        if (this.previewNuevo) { URL.revokeObjectURL(this.previewNuevo); this.previewNuevo = ''; }
+                        this.newProduct = { nombre: '', precio: '', imagen: '', categoria: CATEGORIAS[0] };
+                        this.mostrarToast('✅ Producto agregado');
+                    } else {
+                        this.mostrarToast('⚠️ Error al agregar: ' + res.error);
+                    }
+                },
+                guardarPrecio(p) {
+                    const nuevo = parseInt(p.precio_editable);
+                    if (isNaN(nuevo) || nuevo <= 0) {
+                        this.mostrarToast('⚠️ Precio inválido');
+                        return;
+                    }
+                    p.precio = nuevo;
+                    actualizarProductoFirebase(p.id, { precio: nuevo }).then(res => {
+                        this.mostrarToast(res.success ? '✅ Guardado: ' + p.nombre : '⚠️ Error: ' + res.error);
+                    });
+                },
+                actualizarCampoProducto(p, campo, valor) {
+                    actualizarProductoFirebase(p.id, { [campo]: valor }).then(res => {
+                        if (!res.success) this.mostrarToast('⚠️ Error al guardar: ' + res.error);
+                    });
+                },
+
+                // ═══════════════ VISTA PREVIA DE FOTOS (sin guardado automático) ═══════════════
+                // GitHub Pages es estático: no es posible crear/guardar archivos en
+                // assets/productos/ desde el navegador. Esto solo genera una vista
+                // previa temporal en el dispositivo; la ruta final debe escribirse
+                // a mano una vez la imagen se suba al repositorio de GitHub.
+                subirFoto(event, target) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    if (!file.type.startsWith('image/')) { this.mostrarToast('⚠️ Selecciona una imagen válida'); event.target.value = ''; return; }
+                    if (file.size > 5 * 1024 * 1024) { this.mostrarToast('⚠️ Imagen muy grande (máx 5MB)'); event.target.value = ''; return; }
+
+                    const url = URL.createObjectURL(file);
+                    if (target === 'nuevo') {
+                        if (this.previewNuevo) URL.revokeObjectURL(this.previewNuevo);
+                        this.previewNuevo = url;
+                    } else {
+                        if (this.previewPorId[target.id]) URL.revokeObjectURL(this.previewPorId[target.id]);
+                        this.previewPorId[target.id] = url;
+                    }
+                    this.mostrarToast('📁 Vista previa cargada. Para agregar esta imagen al catálogo, súbela a tu repositorio de GitHub dentro de assets/productos/ y escribe la ruta en el campo de imagen.');
+                    event.target.value = '';
+                },
+
+                // ═══════════════ PROMOCIÓN ═══════════════
+                savePromo() {
+                    localStorage.setItem(STORAGE_KEY_PROMO, this.promoText);
+                    guardarPromoFirebase(this.promoText).then(ok => {
+                        this.mostrarToast(ok ? '✅ Promoción guardada y sincronizada' : '⚠️ Guardado local, sin conexión');
+                    });
+                },
+
+                // ═══════════════ AUTENTICACIÓN ADMIN — FIREBASE AUTH ═══════════════
+                async authenticateAdmin() {
+                    if (!this.adminEmail.trim() || !this.adminPassword) {
+                        this.mostrarToast('⚠️ Ingresa correo y contraseña');
+                        return;
+                    }
+                    this.loginEnProgreso = true;
+                    const res = await loginFirebaseAdmin(this.adminEmail.trim(), this.adminPassword);
+                    this.loginEnProgreso = false;
+                    if (res.success) {
+                        this.adminPassword = '';
+                        this.mostrarToast('🔐 Acceso concedido');
+                    } else {
+                        this.mostrarToast('⚠️ Correo o contraseña incorrectos');
+                    }
+                },
+                cerrarSesionAdmin() {
+                    logoutFirebaseAdmin();
+                    this.adminMode = false;
+                },
+
+                mostrarToast(msg) {
+                    const el = document.getElementById('toast');
+                    if (!el) return;
+                    el.textContent = msg;
+                    el.classList.add('show');
+                    clearTimeout(this._toastTimeout);
+                    this._toastTimeout = setTimeout(() => el.classList.remove('show'), 3000);
+                }
+            };
+        });
+    });
+
+
+    // ══ carouselData() — Galería de imágenes reales de EL TITI ══
+    function carouselData() {
+        return {
+            currentSlide: 0,
+            touchStartX: 0,
+            autoplayTimer: null,
+            isTransitioning: false,
+            images: [
+                'assets/galeria/foto1.webp',
+                'assets/galeria/foto2.webp',
+                'assets/galeria/foto3.webp',
+                'assets/galeria/foto4.webp',
+                'assets/galeria/foto5.webp',
+            ],
+            init() { this.startAutoplay(); },
+            startAutoplay() {
+                this.stopAutoplay();
+                this.autoplayTimer = setInterval(() => { this.nextSlide(); }, 3500);
+            },
+            stopAutoplay()  { clearInterval(this.autoplayTimer); },
+            goTo(idx)       { this.currentSlide = idx; this.startAutoplay(); },
+            prevSlide() {
+                this.currentSlide = this.currentSlide === 0
+                    ? this.images.length - 1 : this.currentSlide - 1;
+                this.startAutoplay();
+            },
+            nextSlide() {
+                this.currentSlide = this.currentSlide === this.images.length - 1
+                    ? 0 : this.currentSlide + 1;
+            },
+            touchStart(e) { this.stopAutoplay(); this.touchStartX = e.touches[0].clientX; },
+            touchEnd(e) {
+                const diff = this.touchStartX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 40) { diff > 0 ? this.nextSlide() : this.prevSlide(); }
+                this.startAutoplay();
+            }
+        };
+    }
+
+
+
+    // PWA — registro del Service Worker real (service-worker.js)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js').catch(() => {});
+        });
+    }
+</script>
+
+
+<script>
+// ── Posicionar WA button al borde derecho del card ──
+function posicionarWA() {
+    var card = document.querySelector('.card-container');
+    var wa   = document.querySelector('.wa-float-wrap');
+    if (!card || !wa) return;
+    var rect  = card.getBoundingClientRect();
+    // 16px desde el borde derecho del card
+    wa.style.left = (rect.right - 72) + 'px';
+    wa.style.right = 'auto';
+}
+window.addEventListener('resize',  posicionarWA);
+window.addEventListener('scroll',  posicionarWA, { passive: true });
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(posicionarWA, 200);  // esperar Alpine
+    setTimeout(posicionarWA, 800);  // segunda pasada por seguridad
+});
+</script>
+</body>
+</html>
