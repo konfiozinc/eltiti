@@ -1,25 +1,18 @@
 // ══════════════════════════════════════════════════════════════
-//  EL TITI — Service Worker
-//  Cachea el shell de la app y los assets locales para uso offline
+//  EL TITI — Service Worker v4 (kill-switch + reconstrucción)
 // ══════════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'eltiti-cache-v3';
+const CACHE_NAME = 'eltiti-cache-v4';
 
 const PRECACHE_URLS = [
   './',
   './index.html',
   './manifest.json',
-
-  // Logo
   './assets/logo/logo-el-titi.png',
   './assets/logo/no-image.webp',
-
-  // Iconos
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/favicon.png',
-
-  // Productos
   './assets/productos/hamburguesa-simple.webp',
   './assets/productos/hamburguesa-doble.webp',
   './assets/productos/hamburguesa-triple.webp',
@@ -32,74 +25,91 @@ const PRECACHE_URLS = [
   './assets/productos/salchipapa-x.webp',
   './assets/productos/choripapa.webp',
   './assets/productos/chuzo-pollo.webp',
+  './assets/productos/chuzo-cerdo.webp',
   './assets/productos/butifarra.webp',
   './assets/productos/empanadas.webp',
-
-  // Galería
   './assets/galeria/foto1.webp',
   './assets/galeria/foto2.webp',
   './assets/galeria/foto3.webp',
   './assets/galeria/foto4.webp',
   './assets/galeria/foto5.webp',
-
-  // Videos "Nuestra Cocina"
   './assets/videos/cocina.mp4',
   './assets/videos/especialidades.mp4',
   './assets/videos/promo.mp4'
 ];
 
-// ── Instalación: precachea el app shell y los assets ──
+// ── Instalación: elimina TODOS los cachés anteriores primero ──
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .catch(() => {}) // si algún asset aún no existe, no bloquea la instalación
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+      .then(() => caches.open(CACHE_NAME))
+      .then(cache => cache.addAll(PRECACHE_URLS).catch(() => {}))
       .then(() => self.skipWaiting())
   );
 });
 
-// ── Activación: limpia cachés antiguas ──
+// ── Activación: toma control inmediato de todos los clientes ──
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
+      .then(() => {
+        // Forzar recarga en todos los clientes abiertos
+        self.clients.matchAll({ type: 'window' }).then(clients => {
+          clients.forEach(client => client.navigate(client.url));
+        });
+      })
   );
 });
 
-// ── Fetch: cache-first para assets locales, network-first para el resto ──
+// ── Fetch: network-first para HTML, cache-first para assets ──
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-  const esAssetLocal = url.origin === self.location.origin && url.pathname.includes('/assets/');
+  const esHTML = request.destination === 'document' || url.pathname.endsWith('.html') || url.pathname === '/eltiti/' || url.pathname === '/eltiti';
+  const esAsset = url.origin === self.location.origin && url.pathname.includes('/assets/');
 
-  if (esAssetLocal) {
-    // Assets (imágenes/videos): cache-first
+  if (esHTML) {
+    // HTML: siempre network-first para tener versión fresca
     event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request).then((response) => {
+      fetch(request)
+        .then(response => {
           const copia = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copia));
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copia));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+  } else if (esAsset) {
+    // Assets: cache-first
+    event.respondWith(
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(response => {
+          const copia = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copia));
           return response;
         }).catch(() => cached);
       })
     );
   } else {
-    // App shell / datos: network-first con fallback a caché (offline)
+    // Resto: network-first
     event.respondWith(
-      fetch(request).then((response) => {
-        if (request.url.startsWith(self.location.origin)) {
-          const copia = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copia));
-        }
-        return response;
-      }).catch(() => caches.match(request))
+      fetch(request)
+        .then(response => {
+          if (request.url.startsWith(self.location.origin)) {
+            const copia = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copia));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
   }
 });

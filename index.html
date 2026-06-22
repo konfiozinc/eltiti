@@ -1285,7 +1285,7 @@
             </button>
         </div>
 
-        <img src="assets/logo/logo-el-titi.png" alt="EL TITI Logo" class="hero-logo-img" @click="tapLogo()" decoding="async">
+        <img src="assets/logo/logo-el-titi.png?v=4" alt="EL TITI Logo" class="hero-logo-img" @click="tapLogo()" decoding="async">
 
         <div class="status-badge" :class="isOpen ? '' : 'closed'">
             <span class="dot"></span>
@@ -1361,7 +1361,7 @@
                     <div class="menu-grid">
                         <template x-for="(p, idx) in grupo.productos" :key="p.id">
                             <div class="menu-card" :class="{ 'agotado': p.agotado }">
-                                <img :src="p.imagen || 'assets/logo/no-image.webp'" :alt="p.nombre" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                                <img :src="p.imagen || 'assets/logo/no-image.webp'" :alt="p.nombre" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp?v=4'">
                                 <span class="badge-agotado" x-show="p.agotado">AGOTADO</span>
                                 <div class="name" x-text="p.nombre"></div>
                                 <div class="price" x-text="'$' + parseInt(p.precio).toLocaleString('es-CO')"></div>
@@ -1600,7 +1600,7 @@
                         <i class="fas fa-camera"></i> Seleccionar imagen
                         <input type="file" accept="image/*" @change="subirFoto($event, 'nuevo')">
                     </label>
-                    <img :src="previewNuevo || newProduct.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                    <img :src="previewNuevo || newProduct.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp?v=4'">
                 </div>
                 <input type="text" x-model="newProduct.imagen" placeholder="assets/productos/nombre-archivo.webp">
                 <p class="img-info-msg">📦 Para agregar nuevas imágenes al catálogo deben subirse al repositorio GitHub dentro de <b>assets/productos</b>. La vista previa es solo temporal en este dispositivo.</p>
@@ -1647,7 +1647,7 @@
                                 <i class="fas fa-camera"></i> Seleccionar imagen
                                 <input type="file" accept="image/*" @change="subirFoto($event, p)">
                             </label>
-                            <img :src="previewPorId[p.id] || p.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                            <img :src="previewPorId[p.id] || p.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp?v=4'">
                         </div>
                         <div style="display:flex;gap:8px;align-items:center;">
                             <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;">Ruta:</span>
@@ -1818,7 +1818,7 @@
                 <img id="qrImgModal" src="" alt="QR Code"
                     style="width:220px;height:220px;border-radius:10px;display:block;">
                 <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;background:#fff;border-radius:50%;border:2px solid var(--amarillo);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.3);">
-                    <img src="assets/logo/logo-el-titi.png" alt="logo" style="width:42px;height:42px;object-fit:cover;border-radius:50%;" loading="lazy" decoding="async">
+                    <img src="assets/logo/logo-el-titi.png?v=4" alt="logo" style="width:42px;height:42px;object-fit:cover;border-radius:50%;" loading="lazy" decoding="async">
                 </div>
             </div>
             <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
@@ -2598,7 +2598,7 @@
     // PWA — registro del Service Worker real (service-worker.js)
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('service-worker.js').catch(() => {});
+            navigator.serviceWorker.register('service-worker.js').then(reg => { reg.addEventListener('updatefound', () => { const newSW = reg.installing; newSW.addEventListener('statechange', () => { if (newSW.state === 'activated') window.location.reload(); }); }); }).catch(() => {});
         });
     }
 </script>
