@@ -3,7 +3,7 @@
 //  Cachea el shell de la app y los assets locales para uso offline
 // ══════════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'eltiti-cache-v1';
+const CACHE_NAME = 'eltiti-cache-v3';
 
 const PRECACHE_URLS = [
   './',
