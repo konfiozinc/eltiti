@@ -1907,9 +1907,16 @@
         try { localStorage.setItem(STORAGE_KEY_PRODUCTOS, JSON.stringify(productosArr)); } catch (e) {}
     }
 
+    const ORDEN_PRODUCTOS = [
+        'hb-simple','hb-doble','hb-triple','hb-especial','hb-x',
+        'sp-simple','sp-especial','sp-doble','sp-triple','sp-x','choripapa',
+        'chuzo-cerdo','chuzo-pollo',
+        'butifarra'
+    ];
+
     function productosObjToArray(obj) {
         if (!obj || typeof obj !== 'object') return [];
-        return Object.keys(obj)
+        const arr = Object.keys(obj)
             .filter(id => obj[id])
             .map(id => ({
                 id,
@@ -1919,6 +1926,15 @@
                 categoria: obj[id].categoria || 'Adicionales',
                 agotado: !!obj[id].agotado
             }));
+        arr.sort((a, b) => {
+            const ia = ORDEN_PRODUCTOS.indexOf(a.id);
+            const ib = ORDEN_PRODUCTOS.indexOf(b.id);
+            if (ia === -1 && ib === -1) return a.nombre.localeCompare(b.nombre);
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+        });
+        return arr;
     }
 
     // ═══════════════════════════════════════════════════════════════
