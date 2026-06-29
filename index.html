@@ -378,6 +378,53 @@
             opacity: 0.55;
             filter: grayscale(0.6);
         }
+        .card-desc {
+            font-size: 10px;
+            color: #bbb;
+            padding: 0 10px 4px;
+            text-align: center;
+            line-height: 1.4;
+            font-style: italic;
+        }
+        .card-counter {
+            padding: 0 10px 10px;
+        }
+        .counter-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,195,0,0.4);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+        .counter-btn {
+            background: transparent;
+            border: none;
+            color: var(--amarillo);
+            font-size: 20px;
+            font-weight: 900;
+            width: 40px;
+            height: 36px;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .counter-btn:active { background: rgba(255,195,0,0.2); }
+        .counter-plus { background: var(--amarillo); color: #000; }
+        .counter-plus:active { background: #e6ae00; }
+        .counter-num {
+            flex: 1;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            color: #fff;
+        }
 
         .carousel-section {
             padding: 0 16px 8px;
@@ -1462,10 +1509,22 @@
                                 <span class="badge-agotado" x-show="p.agotado">AGOTADO</span>
                                 <div class="name" x-text="p.nombre"></div>
                                 <div class="price" x-text="'$' + parseInt(p.precio).toLocaleString('es-CO')"></div>
-                                <button class="btn-pedido" :disabled="p.agotado"
-                                    @click="p.agotado ? null : agregarAlCarrito(p)">
-                                    <span x-text="p.agotado ? '❌ AGOTADO' : '🛒 Agregar'"></span>
-                                </button>
+                                <div class="card-desc" x-show="p.descripcion" x-text="p.descripcion"></div>
+                                <div class="card-counter" x-show="!p.agotado">
+                                    <template x-if="cantidadEnCarrito(p.id) === 0">
+                                        <button class="btn-pedido" @click="agregarAlCarrito(p)">🛒 Agregar</button>
+                                    </template>
+                                    <template x-if="cantidadEnCarrito(p.id) > 0">
+                                        <div class="counter-row">
+                                            <button class="counter-btn" @click="quitarUno(p.id)">−</button>
+                                            <span class="counter-num" x-text="cantidadEnCarrito(p.id)"></span>
+                                            <button class="counter-btn counter-plus" @click="agregarAlCarrito(p)">+</button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="card-counter" x-show="p.agotado">
+                                    <button class="btn-pedido" disabled>❌ AGOTADO</button>
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -1670,6 +1729,9 @@
                             <option :value="cat" x-text="cat"></option>
                         </template>
                     </select>
+                    <textarea x-model="newProduct.descripcion" placeholder="Descripción corta (ingredientes...)" rows="2"
+                        class="col-span-2"
+                        style="background:#1a1a1a;border:1px solid var(--amarillo);border-radius:12px;padding:8px 12px;color:#fff;font-family:Montserrat,sans-serif;font-size:12px;resize:none;width:100%;margin-bottom:6px;"></textarea>
                 </div>
                 <div class="photo-upload-row">
                     <label class="upload-btn">
@@ -1717,6 +1779,14 @@
                                 style="padding:5px 10px;background:var(--amarillo);color:#000;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:Montserrat,sans-serif;white-space:nowrap;">
                                 <i class="fas fa-save"></i> OK
                             </button>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:flex-start;">
+                            <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;padding-top:6px;">Desc:</span>
+                            <textarea x-model="p.descripcion"
+                                @change="actualizarCampoProducto(p, 'descripcion', p.descripcion)"
+                                rows="2"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:#ddd;font-family:Montserrat,sans-serif;font-size:11px;resize:none;"
+                                placeholder="Ingredientes o descripción corta..."></textarea>
                         </div>
                         <div class="photo-upload-row">
                             <label class="upload-btn">
@@ -2021,7 +2091,8 @@
                 precio: obj[id].precio || 0,
                 imagen: obj[id].imagen || '',
                 categoria: obj[id].categoria || 'Adicionales',
-                agotado: !!obj[id].agotado
+                agotado: !!obj[id].agotado,
+                descripcion: obj[id].descripcion || ''
             }));
         arr.sort((a, b) => {
             const ia = ORDEN_PRODUCTOS.indexOf(a.id);
@@ -2224,7 +2295,7 @@
                 adminEmail: '',
                 adminPassword: '',
                 loginEnProgreso: false,
-                newProduct: { nombre: '', precio: '', imagen: '', categoria: CATEGORIAS[0] },
+                newProduct: { nombre: '', precio: '', imagen: '', categoria: CATEGORIAS[0], descripcion: '' },
                 previewNuevo: '',
                 previewPorId: {},
 
@@ -2288,6 +2359,10 @@
                 },
                 get totalItems() { return this.carrito.reduce((s, i) => s + i.cantidad, 0); },
                 get totalPrecio() { return this.carrito.reduce((s, i) => s + i.precio * i.cantidad, 0); },
+                cantidadEnCarrito(id) {
+                    const item = this.carrito.find(i => i.id === id);
+                    return item ? item.cantidad : 0;
+                },
 
                 // ═══════════════ INICIALIZACIÓN ═══════════════
                 initApp() {
@@ -2553,12 +2628,13 @@
                         precio: parseInt(this.newProduct.precio),
                         imagen: this.newProduct.imagen || '',
                         categoria: CATEGORIAS.includes(this.newProduct.categoria) ? this.newProduct.categoria : CATEGORIAS[0],
+                        descripcion: this.newProduct.descripcion || '',
                         agotado: false
                     };
                     const res = await crearProductoFirebase(id, datos);
                     if (res.success) {
                         if (this.previewNuevo) { URL.revokeObjectURL(this.previewNuevo); this.previewNuevo = ''; }
-                        this.newProduct = { nombre: '', precio: '', imagen: '', categoria: CATEGORIAS[0] };
+                        this.newProduct = { nombre: '', precio: '', imagen: '', categoria: CATEGORIAS[0], descripcion: '' };
                         this.mostrarToast('✅ Producto agregado');
                     } else {
                         this.mostrarToast('⚠️ Error al agregar: ' + res.error);
