@@ -1,0 +1,16 @@
+[
+  { "id": "seed-hb-simple",   "nombre": "Hamburguesa (Simple)",   "categoria": "Hamburguesas", "precio": 7000,  "imagen": "assets/productos/hamburguesa-simple.webp",   "disponible": true },
+  { "id": "seed-hb-doble",    "nombre": "Hamburguesa (Doble)",    "categoria": "Hamburguesas", "precio": 10000, "imagen": "assets/productos/hamburguesa-doble.webp",    "disponible": true },
+  { "id": "seed-hb-triple",   "nombre": "Hamburguesa (Triple)",   "categoria": "Hamburguesas", "precio": 13000, "imagen": "assets/productos/hamburguesa-triple.webp",   "disponible": true },
+  { "id": "seed-hb-especial", "nombre": "Hamburguesa (Especial)", "categoria": "Hamburguesas", "precio": 18000, "imagen": "assets/productos/hamburguesa-especial.webp", "disponible": true },
+  { "id": "seed-hb-x",        "nombre": "Hamburguesa (X)",        "categoria": "Hamburguesas", "precio": 15000, "imagen": "assets/productos/hamburguesa-x.webp",        "disponible": true },
+  { "id": "seed-sp-simple",   "nombre": "Salchipapa (Simple)",    "categoria": "Salchipapas",  "precio": 5000,  "imagen": "assets/productos/salchipapa-simple.webp",    "disponible": true },
+  { "id": "seed-sp-doble",    "nombre": "Salchipapa (Doble)",     "categoria": "Salchipapas",  "precio": 7000,  "imagen": "assets/productos/salchipapa-doble.webp",     "disponible": true },
+  { "id": "seed-sp-triple",   "nombre": "Salchipapa (Triple)",    "categoria": "Salchipapas",  "precio": 10000, "imagen": "assets/productos/salchipapa-triple.webp",    "disponible": true },
+  { "id": "seed-sp-especial", "nombre": "Salchipapa (Especial)",  "categoria": "Salchipapas",  "precio": 13000, "imagen": "assets/productos/salchipapa-especial.webp",  "disponible": true },
+  { "id": "seed-sp-x",        "nombre": "Salchipapa (X)",         "categoria": "Salchipapas",  "precio": 15000, "imagen": "assets/productos/salchipapa-x.webp",         "disponible": true },
+  { "id": "seed-choripapa",   "nombre": "Choripapa",              "categoria": "Salchipapas",  "precio": 12000, "imagen": "assets/productos/choripapa.webp",            "disponible": true },
+  { "id": "seed-chuzo-pollo", "nombre": "Chuzo de Pollo",         "categoria": "Chuzos",       "precio": 15000, "imagen": "assets/productos/chuzo-pollo.webp",          "disponible": true },
+  { "id": "seed-butifarra",   "nombre": "Butifarra",              "categoria": "Adicionales",  "precio": 800,   "imagen": "assets/productos/butifarra.webp",            "disponible": true },
+  { "id": "seed-empanadas",   "nombre": "Empanadas (6x)",         "categoria": "Adicionales",  "precio": 2000,  "imagen": "assets/productos/empanadas.webp",            "disponible": true }
+]

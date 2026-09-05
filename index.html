@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>EL TITI Comidas Rápidas | Bello, Antioquia</title>
+    <meta name="description" content="El mejor menú de hamburguesas, salchipapas, chuzos y más. Domicilios en Barrio Nueva Jerusalén, Bello, Antioquia. ¡Pide ahora por WhatsApp!">
+    <meta name="keywords" content="comidas rapidas, hamburguesas, salchipapas, domicilios, bello, antioquia, el titi">
+    <meta name="author" content="KONFÍO ZINC">
+    <meta property="og:title" content="EL TITI Comidas Rápidas">
+    <meta property="og:description" content="La mejor comida rápida en Bello. Pide tu favorita por WhatsApp 📲">
+    <meta property="og:image" content="https://konfiozinc.github.io/eltiti/assets/logo/logo-el-titi.png">
+    <meta property="og:url" content="https://konfiozinc.github.io/eltiti/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://konfiozinc.github.io/eltiti/">
+    <meta name="theme-color" content="#B22222">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="assets/icons/favicon.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    
+<link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+
+<div id="app" x-data="appData" x-init="initApp()" class="card-container">
+
+    <!-- ===== INDICADOR DE SINCRONIZACIÓN ===== -->
+    <div class="sync-indicator" :class="syncStatus">
+        <span class="dot-sync"></span>
+        <span x-text="syncStatus === 'connected' ? 'Firebase conectado' : (syncStatus === 'syncing' ? 'Sincronizando' : 'Error de conexión')"></span>
+    </div>
+
+
+    <!-- ===== HERO ===== -->
+    <div class="hero">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:2px;position:relative;">
+            <button @click="installModalOpen = true" title="Instalar App"
+                style="width:36px;height:36px;background:linear-gradient(135deg,#FFC300,#ff8c00);border:none;border-radius:50%;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(255,195,0,0.5);flex-shrink:0;">
+                <i class="fas fa-download" style="font-size:15px;"></i>
+            </button>
+            <h1 class="hero-title" style="position:absolute;left:50%;transform:translateX(-50%);margin:0;pointer-events:none;white-space:nowrap;">EL TITI</h1>
+            <button @click="adminMode = !adminMode" title="Admin"
+                style="width:32px;height:32px;border-radius:50%;background:rgba(255,195,0,0.15);border:1px solid rgba(255,195,0,0.4);color:#FFC300;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">
+                <i class="fas fa-lock"></i>
+            </button>
+        </div>
+
+        <img src="assets/logo/logo-el-titi.png" alt="EL TITI Logo" class="hero-logo-img" @click="tapLogo()" decoding="async">
+
+        <div class="status-badge" :class="isOpen ? '' : 'closed'">
+            <span class="dot"></span>
+            <span x-text="isOpen ? 'ABIERTO' : 'CERRADO'"></span>
+        </div>
+
+        <p class="hero-subtitle mt-1">COMIDAS RÁPIDAS</p>
+
+        <div class="quick-buttons">
+            <a href="https://wa.me/573014387942" target="_blank" class="quick-btn btn-whatsapp">
+                <i class="fab fa-whatsapp"></i>
+                <span>WhatsApp</span>
+            </a>
+            <a href="tel:3014387942" class="quick-btn btn-phone">
+                <i class="fas fa-phone-alt"></i>
+                <span>Llamar</span>
+            </a>
+            <a href="https://www.google.com/maps/search/?api=1&query=6%C2%B019'02.5%22N+75%C2%B034'44.9%22W" target="_blank" class="quick-btn btn-location">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Ubicación</span>
+            </a>
+            <button @click="shareCard()" class="quick-btn btn-share">
+                <i class="fas fa-share-alt"></i>
+                <span>Compartir</span>
+            </button>
+            <button @click="saveContact()" class="quick-btn btn-save">
+                <i class="fas fa-address-card"></i>
+                <span>Guardar</span>
+            </button>
+            <button @click="abrirQR()" class="quick-btn btn-qr" style="">
+                <i class="fas fa-qrcode"></i>
+                <span>Código QR</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== PROMOCIONES ===== -->
+    <div class="promo-banner" x-show="promoText">
+        <span x-text="promoText"></span>
+    </div>
+
+    <!-- ===== MENÚ ===== -->
+    <div class="menu-section" style="color:#fff;">
+        <div class="menu-header">
+            <h2>🍔 MENÚ</h2>
+            <span x-text="productosFiltrados.length + ' producto' + (productosFiltrados.length !== 1 ? 's' : '')"></span>
+        </div>
+
+        <!-- Buscador en tiempo real -->
+        <div class="menu-search-wrap">
+            <input type="text" x-model="busqueda" placeholder="🔎 Buscar en el menú...">
+        </div>
+
+        <!-- Filtros de categoría (navegación rápida) -->
+        <div class="category-filters">
+            <template x-for="cat in categorias" :key="cat">
+                <a class="category-chip" :href="'#cat-' + cat.toLowerCase()">
+                    <span x-text="emojisCategoria[cat]"></span>
+                    <span x-text="cat"></span>
+                </a>
+            </template>
+        </div>
+
+        <div class="menu-grid-wrap">
+            <template x-for="grupo in categoriasConProductos" :key="grupo.nombre">
+                <div class="categoria-group" :id="'cat-' + grupo.nombre.toLowerCase()" x-show="grupo.count > 0">
+                    <div class="categoria-header">
+                        <span class="categoria-emoji" x-text="grupo.emoji"></span>
+                        <span class="categoria-titulo" x-text="grupo.nombre.toUpperCase()"></span>
+                        <span class="categoria-count" x-text="grupo.count"></span>
+                    </div>
+                    <div class="categoria-separator"></div>
+                    <div class="menu-grid">
+                        <template x-for="(p, idx) in grupo.productos" :key="p.id">
+                            <div class="menu-card" :class="{ 'agotado': p.agotado }">
+                                <img :src="p.imagen || 'assets/logo/no-image.webp'" :alt="p.nombre" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                                <span class="badge-agotado" x-show="p.agotado">AGOTADO</span>
+                                <div class="name" x-text="p.nombre"></div>
+                                <div class="price" x-text="'$' + parseInt(p.precio).toLocaleString('es-CO')"></div>
+                                <button class="btn-pedido" :disabled="p.agotado"
+                                    @click="p.agotado ? null : agregarAlCarrito(p)">
+                                    <span x-text="p.agotado ? '❌ AGOTADO' : '🛒 Agregar'"></span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+            <div class="no-results" x-show="productosFiltrados.length === 0">
+                😕 No se encontraron productos
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== GALERÍA (CARRUSEL) ===== -->
+    <div class="carousel-section" style="color:#fff;">
+        <h2 style="text-align:center;letter-spacing:2px;">GALERÍA</h2>
+        <div class="carousel-container" x-data="carouselData()" @touchstart="touchStart($event)" @touchend="touchEnd($event)">
+            <div class="carousel-track" :style="'transform: translateX(-' + (currentSlide * 100) + '%)'">
+                <template x-for="(img, idx) in images" :key="idx">
+                    <div class="carousel-slide">
+                        <img :src="img" :alt="'Galería ' + idx" loading="lazy" decoding="async" @error="$event.target.closest('.carousel-slide').style.display='none'">
+                    </div>
+                </template>
+            </div>
+            <button class="carousel-btn prev" @click="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+            <button class="carousel-btn next" @click="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+            <div class="carousel-dots">
+                <template x-for="(img, idx) in images" :key="idx">
+                    <span :class="{ 'active': idx === currentSlide }" @click="goTo(idx)"></span>
+                </template>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- ===== NUESTRA COCINA (VIDEOS LOCALES) — oculto hasta tener videos reales ===== -->
+    <!--
+    <div class="video-section" ...></div>
+    -->
+
+
+
+    <!-- ══ SECCIÓN RESEÑAS ══ -->
+    <div class="reviews-section" style="background:rgba(0,0,0,0.3);border-radius:16px;margin:0 8px 16px;">
+        <!-- Encabezado con promedio -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:18px;">⭐</span>
+                <span style="font-family:Montserrat,sans-serif;font-size:14px;font-weight:900;color:var(--amarillo);letter-spacing:1px;text-shadow:0 1px 4px rgba(0,0,0,.5);">RESEÑAS</span>
+            </div>
+            <div x-show="reseñas.length > 0" style="text-align:right;">
+                <div style="font-size:18px;font-weight:900;color:var(--amarillo);font-family:Montserrat,sans-serif;text-shadow:0 1px 4px rgba(0,0,0,.6);" x-text="promedioEstrellas + ' ★'"></div>
+                <div style="font-size:10px;color:#f0d8a0;font-weight:700;" x-text="reseñas.length + ' reseña' + (reseñas.length!==1?'s':'')"></div>
+            </div>
+        </div>
+
+        <!-- Formulario nueva reseña -->
+        <div class="review-form">
+            <p style="font-size:13px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px;">¿Cómo fue tu experiencia?</p>
+            <!-- Estrellas -->
+            <div class="stars-input">
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 1}" @click.prevent="nuevaReseña.estrellas = 1">★</button>
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 2}" @click.prevent="nuevaReseña.estrellas = 2">★</button>
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 3}" @click.prevent="nuevaReseña.estrellas = 3">★</button>
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 4}" @click.prevent="nuevaReseña.estrellas = 4">★</button>
+                <button class="star-btn" :class="{'active': nuevaReseña.estrellas >= 5}" @click.prevent="nuevaReseña.estrellas = 5">★</button>
+            </div>
+            <!-- Campo nombre con bloqueo total de autofill -->
+                <input
+                    id="campoNombreReseña"
+                    type="text"
+                    placeholder="Escribe tu nombre"
+                    readonly
+                    x-ref="inputNombre"
+                    @touchstart="$el.removeAttribute('readonly')"
+                    @mousedown="$el.removeAttribute('readonly')"
+                    @focus="$el.removeAttribute('readonly'); if($el.value.includes('@')){$el.value='';nuevaReseña.autor='';}"
+                    @input="nuevaReseña.autor = $el.value"
+                    @blur="event.target.style.borderColor='rgba(255,255,255,.1)'"
+                    autocomplete="off"
+                    style="width:100%;background:#1a1a1a;border:1px solid rgba(255,195,0,.4);border-radius:10px;padding:10px 14px;color:#fff;font-family:Montserrat,sans-serif;font-size:13px;font-weight:600;outline:none;margin-bottom:8px;">
+            <textarea x-model="nuevaReseña.texto" placeholder="Cuéntanos tu experiencia (opcional)"
+                rows="3" style="width:100%;background:#1a1a1a;border:1px solid rgba(255,195,0,.3);border-radius:10px;padding:10px 14px;color:#fff;font-family:Montserrat,sans-serif;font-size:13px;outline:none;resize:none;" placeholder="Cuéntanos tu experiencia (opcional)"></textarea>
+            <button class="btn-enviar-reseña" @click="enviarReseña()">
+                ⭐ Publicar reseña
+            </button>
+        </div>
+
+        <!-- Lista de reseñas -->
+        <template x-for="(r, i) in reseñas.slice(0,5)" :key="i">
+            <div class="review-card">
+                <div class="review-header">
+                    <span class="review-author" x-text="r.autor"></span>
+                    <span class="review-stars" style="color:#FFC300;" x-text="'★'.repeat(r.estrellas||0)+'☆'.repeat(5-(r.estrellas||0))"></span>
+                </div>
+                <div class="review-text" x-show="r.texto" x-text="r.texto"></div>
+                <div class="review-date" x-text="new Date(r.fecha).toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})"></div>
+            </div>
+        </template>
+
+        <!-- Sin reseñas -->
+        <div x-show="reseñas.length === 0" style="text-align:center;padding:20px;color:#555;font-size:12px;font-family:Montserrat,sans-serif;">
+            <div style="font-size:2rem;margin-bottom:8px;">⭐</div>
+<span style="color:#f0e0c0;font-weight:600;">¡Sé el primero en dejar una reseña!</span>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="footer" style="color:#f0f0f0;">
+        <p class="font-semibold text-white">EL TITI Comidas Rápidas</p>
+        <p class="text-xs">Barrio Nueva Jerusalén, Bello, Antioquia</p>
+        <p class="text-xs mt-1" x-text="'Horario: ' + horarioTexto"></p>
+        <p class="marca" style="color:var(--amarillo);font-weight:700;letter-spacing:1px;">✦ KONFÍO ZINC · Todos los derechos reservados ✦</p>
+    </div>
+
+    <!-- ===== BOTÓN FLOTANTE WHATSAPP ===== -->
+    <div class="wa-float-wrap">
+        <div class="wa-ring"></div>
+        <div class="wa-ring"></div>
+        <div class="wa-ring"></div>
+        <a href="https://wa.me/573014387942" target="_blank" class="whatsapp-float" id="whatsappFloat">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+    </div>
+
+    <!-- ===== PANEL ADMINISTRADOR ===== -->
+    <div class="admin-panel" :class="{ 'open': adminMode }">
+        <div x-show="!adminAuthenticated">
+            <h3>🔐 ACCESO ADMIN</h3>
+            <div class="admin-login-extra">
+                <label>Correo</label>
+                <input type="email" x-model="adminEmail" placeholder="correo@eltiti.com" autocomplete="username" @keydown.enter="authenticateAdmin()">
+                <label>Contraseña</label>
+                <input type="password" x-model="adminPassword" placeholder="Contraseña" autocomplete="current-password" @keydown.enter="authenticateAdmin()">
+            </div>
+            <button @click="authenticateAdmin()" :disabled="loginEnProgreso">
+                <span x-text="loginEnProgreso ? 'Verificando...' : 'Entrar'"></span>
+            </button>
+        </div>
+        <div x-show="adminAuthenticated">
+            <div class="flex justify-between items-center mb-2">
+                <h3>⚙️ PANEL DE ADMIN</h3>
+                <button class="btn-danger" @click="cerrarSesionAdmin()">Salir</button>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="admin-stats">
+                <div class="admin-stat-card">
+                    <div class="num" x-text="productos.length"></div>
+                    <div class="lbl">Productos</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="num" x-text="categorias.length"></div>
+                    <div class="lbl">Categorías</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="num" x-text="productosAgotadosCount"></div>
+                    <div class="lbl">Agotados</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="num" x-text="ultimaSyncHora"></div>
+                    <div class="lbl">Última sync</div>
+                </div>
+            </div>
+            <div class="admin-sync-row">
+                <span class="sync-indicator" :class="syncStatus" style="position:static;background:none;border:none;padding:0;">
+                    <span class="dot-sync"></span>
+                </span>
+                <span x-text="syncStatus === 'connected' ? 'Firebase conectado' : (syncStatus === 'syncing' ? 'Sincronizando...' : 'Error de conexión')"></span>
+            </div>
+
+            <div class="mb-4 border-t border-gray-700 pt-3">
+                <p class="text-sm font-semibold text-gray-300 mb-1">Horario de atención</p>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label>Días (0-6)</label>
+                        <input type="text" x-model="adminHorario.dias" placeholder="Ej: 5,6,0">
+                    </div>
+                    <div>
+                        <label>Inicio (h)</label>
+                        <input type="number" x-model="adminHorario.inicio" min="0" max="23">
+                    </div>
+                    <div>
+                        <label>Fin (h)</label>
+                        <input type="number" x-model="adminHorario.fin" min="0" max="23">
+                    </div>
+                </div>
+                <button @click="guardarHorario()" class="mt-2">Guardar</button>
+            </div>
+
+            <div class="mb-4 border-t border-gray-700 pt-3">
+                <label class="text-sm font-semibold text-gray-300">Promoción</label>
+                <input type="text" x-model="promoText" placeholder="Texto de promoción">
+                <button @click="savePromo()" class="mt-1">Guardar</button>
+            </div>
+
+            <div class="mb-4 border-t border-gray-700 pt-3">
+                <p class="text-sm font-semibold text-gray-300 mb-1">Nuevo producto</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" x-model="newProduct.nombre" placeholder="Nombre">
+                    <input type="number" x-model="newProduct.precio" placeholder="Precio">
+                    <select x-model="newProduct.categoria" class="col-span-2">
+                        <template x-for="cat in categorias" :key="cat">
+                            <option :value="cat" x-text="cat"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="photo-upload-row">
+                    <label class="upload-btn">
+                        <i class="fas fa-camera"></i> Seleccionar imagen
+                        <input type="file" accept="image/*" @change="subirFoto($event, 'nuevo')">
+                    </label>
+                    <img :src="previewNuevo || newProduct.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                </div>
+                <input type="text" x-model="newProduct.imagen" placeholder="assets/productos/nombre-archivo.webp">
+                <p class="img-info-msg">📦 Para agregar nuevas imágenes al catálogo deben subirse al repositorio GitHub dentro de <b>assets/productos</b>. La vista previa es solo temporal en este dispositivo.</p>
+                <button @click="addProduct()" class="mt-1">➕ Agregar</button>
+            </div>
+
+            <div class="mt-4">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-sm font-semibold text-gray-300" style="margin:0;">Productos</p>
+                </div>
+                <div class="admin-search-wrap">
+                    <input type="text" x-model="adminBusqueda" placeholder="🔎 Buscar producto...">
+                </div>
+                <template x-for="(p, idx) in productosAdminFiltrados" :key="p.id">
+                    <div class="product-admin-item" style="flex-direction:column;align-items:stretch;gap:8px;padding:10px 0;">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="font-size:1.1rem;" x-text="p.emoji || '🍔'"></span>
+                            <input type="text" x-model="p.nombre"
+                                @change="actualizarCampoProducto(p, 'nombre', p.nombre)"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:#fff;font-family:Montserrat,sans-serif;font-size:12px;"
+                                placeholder="Nombre del producto">
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;">Categoría:</span>
+                            <select x-model="p.categoria" @change="actualizarCampoProducto(p, 'categoria', p.categoria)"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:#fff;font-family:Montserrat,sans-serif;font-size:12px;">
+                                <template x-for="cat in categorias" :key="cat">
+                                    <option :value="cat" x-text="cat"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;">$ Precio:</span>
+                            <input type="number" x-model="p.precio_editable"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:var(--amarillo);font-family:Montserrat,sans-serif;font-size:13px;font-weight:700;"
+                                placeholder="Precio">
+                            <button @click="guardarPrecio(p)"
+                                style="padding:5px 10px;background:var(--amarillo);color:#000;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:Montserrat,sans-serif;white-space:nowrap;">
+                                <i class="fas fa-save"></i> OK
+                            </button>
+                        </div>
+                        <div class="photo-upload-row">
+                            <label class="upload-btn">
+                                <i class="fas fa-camera"></i> Seleccionar imagen
+                                <input type="file" accept="image/*" @change="subirFoto($event, p)">
+                            </label>
+                            <img :src="previewPorId[p.id] || p.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;">Ruta:</span>
+                            <input type="text" x-model="p.imagen"
+                                @change="actualizarCampoProducto(p, 'imagen', p.imagen)"
+                                style="flex:1;background:#1a1a1a;border:1px solid rgba(255,195,0,0.3);border-radius:8px;padding:5px 8px;color:#fff;font-family:Montserrat,sans-serif;font-size:11px;"
+                                placeholder="assets/productos/nombre-archivo.webp">
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <button @click="toggleAgotado(p)"
+                                :style="p.agotado ? 'background:#ef4444;' : 'background:#22c55e;'"
+                                style="padding:4px 12px;border:none;border-radius:20px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:Montserrat,sans-serif;">
+                                <span x-text="p.agotado ? '❌ AGOTADO' : '✅ DISPONIBLE'"></span>
+                            </button>
+                            <button @click="deleteProduct(p.id)"
+                                style="padding:4px 10px;background:#7f1d1d;border:none;border-radius:8px;color:#fca5a5;font-size:11px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </template>
+                <div x-show="productosAdminFiltrados.length === 0" style="text-align:center;padding:14px;color:#999;font-size:12px;">
+                    Sin resultados
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ===== MODAL INSTALACIÓN ===== -->
+    <div id="installModal" x-show="installModalOpen" x-cloak style="position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;" @click.self="installModalOpen=false">
+        <div class="modal-content" style="max-width:360px;width:92%;max-height:85vh;overflow-y:auto;">
+            <span class="close-button" @click="installModalOpen=false">&times;</span>
+            <div style="text-align:center;padding:8px 0 16px;">
+                <div style="font-size:3rem;margin-bottom:6px;">📲</div>
+                <h3 style="color:var(--amarillo);font-weight:900;font-size:20px;letter-spacing:1px;margin-bottom:6px;">¡Instala la App!</h3>
+                <p style="font-size:12px;color:#d0d0d0;line-height:1.5;">Accede al menú de <b style="color:#fff;">EL TITI</b> directamente<br>desde la pantalla de tu celular</p>
+            </div>
+
+            <!-- Tabs -->
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+                <button @click="installTab='android'" :style="installTab==='android'?'background:var(--amarillo);color:#000;':'background:rgba(255,255,255,.1);color:#fff;'" style="flex:1;padding:8px;border-radius:8px;border:none;font-weight:700;font-size:12px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                    <i class="fab fa-android"></i> Android
+                </button>
+                <button @click="installTab='ios'" :style="installTab==='ios'?'background:var(--amarillo);color:#000;':'background:rgba(255,255,255,.1);color:#fff;'" style="flex:1;padding:8px;border-radius:8px;border:none;font-weight:700;font-size:12px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                    <i class="fab fa-apple"></i> iPhone
+                </button>
+            </div>
+
+            <!-- Android steps -->
+            <div x-show="installTab==='android'">
+                <div style="margin-bottom:10px;">
+                    <button @click="deferredPrompt ? instalarPWA() : mostrarToast('Abre en Chrome → menú ⋮ → Añadir a pantalla de inicio')"
+                        style="width:100%;padding:14px;background:linear-gradient(135deg,#FFC300,#ff8c00);color:#000;border:none;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;font-family:Montserrat,sans-serif;box-shadow:0 4px 20px rgba(255,195,0,0.5);letter-spacing:0.5px;">
+                        <i class="fas fa-mobile-alt" style="margin-right:8px;"></i> ¡Instalar App Gratis!
+                    </button>
+                </div>
+                <div style="text-align:left;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">1</div>
+                        <div><b style="font-size:13px;">Abre en Chrome</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Asegúrate de usar Google Chrome en tu Android.</p></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">2</div>
+                        <div><b style="font-size:13px;">Menú ⋮</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Toca los tres puntos en la esquina superior derecha.</p></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">3</div>
+                        <div><b style="font-size:13px;">Añadir a pantalla de inicio</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Selecciona esa opción y confirma.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- iOS steps -->
+            <div x-show="installTab==='ios'">
+                <div style="text-align:left;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">1</div>
+                        <div><b style="font-size:13px;">Abre en Safari</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Solo funciona en el navegador Safari de Apple.</p></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">2</div>
+                        <div><b style="font-size:13px;">Botón Compartir ⬆</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Toca el ícono de compartir en la barra inferior.</p></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;">
+                        <div style="min-width:24px;height:24px;border-radius:50%;background:var(--amarillo);color:#000;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">3</div>
+                        <div><b style="font-size:13px;">Añadir a pantalla de inicio</b><p style="font-size:11px;color:#c0c0c0;margin-top:2px;">Busca esa opción en el menú que aparece.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="closeInstallModalBtn2" @click="installModalOpen=false" style="width:100%;margin-top:14px;padding:10px;background:transparent;border:1px solid rgba(255,255,255,.2);border-radius:20px;color:#c0c0c0;font-family:Montserrat,sans-serif;font-size:12px;cursor:pointer;">Cerrar</button>
+        </div>
+    </div>
+
+
+
+    <!-- ══ CARRITO FAB ══ -->
+    <div style="position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateX(-145px);z-index:49;">
+        <button class="cart-fab" @click="carritoOpen = true"
+            style="position:relative;opacity:1"
+            :style="totalItems > 0 ? 'transform:scale(1.08);box-shadow:0 6px 28px rgba(255,195,0,.8)' : ''">
+            🛒
+            <span class="cart-badge" x-show="totalItems > 0" x-text="totalItems"></span>
+        </button>
+    </div>
+
+    <!-- ══ MODAL CARRITO ══ -->
+    <div class="cart-overlay" x-show="carritoOpen" x-cloak
+        :style="carritoOpen ? 'display:flex' : 'display:none'"
+        @click.self="carritoOpen=false">
+        <div class="cart-sheet">
+            <div class="cart-handle"></div>
+            <div class="cart-header">
+                <span class="cart-title">🛒 MI PEDIDO</span>
+                <span style="font-size:12px;color:#888;font-family:Montserrat,sans-serif;"
+                    x-text="totalItems + ' producto' + (totalItems !== 1 ? 's' : '')"></span>
+            </div>
+
+            <!-- Carrito vacío -->
+            <div class="cart-empty" x-show="carrito.length === 0">
+                <div class="cart-empty-icon">🛒</div>
+                <p>Tu pedido está vacío.<br>¡Agrega algo del menú!</p>
+            </div>
+
+            <!-- Items del carrito -->
+            <template x-for="item in carrito" :key="item.id">
+                <div class="cart-item">
+                    <div class="cart-item-emoji" x-text="item.emoji"></div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-name" x-text="item.nombre"></div>
+                        <div class="cart-item-price"
+                            x-text="'$' + (item.precio * item.cantidad).toLocaleString('es-CO')"></div>
+                    </div>
+                    <div class="cart-qty">
+                        <button class="qty-btn qty-minus" @click="quitarUno(item.id)">−</button>
+                        <span class="qty-num" x-text="item.cantidad"></span>
+                        <button class="qty-btn qty-plus" @click="item.cantidad++">+</button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Total -->
+            <div class="cart-total-row" x-show="carrito.length > 0">
+                <span class="cart-total-label">TOTAL DEL PEDIDO</span>
+                <span class="cart-total-val" x-text="'$' + totalPrecio.toLocaleString('es-CO')"></span>
+            </div>
+
+            <!-- Acciones -->
+            <div class="cart-actions" x-show="carrito.length > 0">
+                <button class="btn-enviar-pedido" @click="enviarPedido()">
+                    <i class="fab fa-whatsapp" style="margin-right:8px;font-size:18px;"></i>
+                    Enviar pedido por WhatsApp
+                </button>
+                <button class="btn-vaciar" @click="vaciarCarrito()">🗑️ Vaciar carrito</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL QR GRANDE ===== -->
+    <div x-show="qrModalOpen" x-cloak
+        :style="qrModalOpen ? 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);' : 'display:none'"
+        @click.self="qrModalOpen=false">
+        <div style="background:#111;border:2px solid var(--amarillo);border-radius:24px;padding:28px 24px;text-align:center;max-width:320px;width:90%;box-shadow:0 0 60px rgba(255,195,0,0.2);">
+            <h3 style="color:var(--amarillo);font-weight:900;font-size:18px;letter-spacing:2px;margin-bottom:6px;">📲 COMPARTE TU TARJETA</h3>
+            <p style="font-size:12px;color:#c0c0c0;margin-bottom:18px;">Escanea el QR con la cámara de tu teléfono</p>
+            <div style="display:inline-block;padding:10px;background:#fff;border-radius:16px;border:3px solid var(--amarillo);box-shadow:0 0 30px rgba(255,195,0,0.3);position:relative;">
+                <img id="qrImgModal" src="" alt="QR Code"
+                    style="width:220px;height:220px;border-radius:10px;display:block;">
+                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;background:#fff;border-radius:50%;border:2px solid var(--amarillo);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.3);">
+                    <img src="assets/logo/logo-el-titi.png" alt="logo" style="width:42px;height:42px;object-fit:cover;border-radius:50%;" loading="lazy" decoding="async">
+                </div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                <button @click="copiarEnlace()" style="padding:9px 20px;background:var(--amarillo);color:#000;border:none;border-radius:20px;font-weight:800;font-size:13px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                    <i class="fas fa-copy"></i> Copiar enlace
+                </button>
+                <button @click="qrModalOpen=false" style="padding:9px 20px;background:transparent;border:1px solid rgba(255,255,255,0.2);color:#c0c0c0;border-radius:20px;font-size:13px;cursor:pointer;font-family:Montserrat,sans-serif;">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+</div>
+
+<!-- ===== SCRIPTS FUERA DE ALPINE PARA GARANTIZAR FUNCIONAMIENTO ===== -->
+
+<script src="scripts.js"></script>
+
+
+<!-- ===== DEFINICIÓN DE APP DATA (Alpine) ===== -->
+
+
+
+
+</body>
+</html>

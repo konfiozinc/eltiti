@@ -1,0 +1,10 @@
+{
+  "promocion": "🔥 PROMO DEL FIN DE SEMANA: 2x1 en Hamburguesas",
+  "horario": {
+    "dias": "5,6,0",
+    "inicio": 18,
+    "fin": 2
+  },
+  "categorias": ["Hamburguesas", "Salchipapas", "Chuzos", "Bebidas", "Adicionales"],
+  "whatsapp": "573014387942"
+}
