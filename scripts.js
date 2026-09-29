@@ -5,7 +5,7 @@
     const STORAGE_KEY_HORARIO   = 'eltiti_horario';
     const STORAGE_KEY_PROMO     = 'eltiti_promo';
 
-    const CATEGORIAS = ['Hamburguesas', 'Salchipapas', 'Chuzos', 'Bebidas', 'Adicionales'];
+    let CATEGORIAS = ['Hamburguesas', 'Salchipapas', 'Chuzos', 'Bebidas', 'Adicionales'];
     const EMOJIS_CATEGORIA = {
         'Hamburguesas': '🍔',
         'Salchipapas':  '🍟',
@@ -98,6 +98,7 @@
                 precio: obj[id].precio || 0,
                 imagen: obj[id].imagen || '',
                 categoria: obj[id].categoria || 'Adicionales',
+                etiquetas: Array.isArray(obj[id].etiquetas) ? obj[id].etiquetas : [],
                 agotado: !!obj[id].agotado
             }));
     }
@@ -155,6 +156,7 @@
                             precio: p.precio || 0,
                             imagen: p.imagen || '',
                             categoria: CATEGORIAS.includes(p.categoria) ? p.categoria : 'Adicionales',
+                            etiquetas: Array.isArray(p.etiquetas) ? p.etiquetas : [],
                             agotado: !!p.agotado
                         };
                     });
@@ -355,11 +357,48 @@
                 get totalPrecio() { return this.carrito.reduce((s, i) => s + i.precio * i.cantidad, 0); },
 
                 // ═══════════════ INICIALIZACIÓN ═══════════════
-                initApp() {
-                    // 1. Cargar caché local (uso inmediato / modo offline)
-                    const cache = cargarProductosCache();
-                    if (cache.length) {
-                        this.productos = cache.map(p => ({ ...p, precio_editable: p.precio }));
+                // 0. Contenido base desde Pages CMS (data/*.json) — Firebase lo sobrescribe en vivo
+                async cargarContenidoBase() {
+                    try {
+                        const resp = await fetch('data/configuracion.json', { cache: 'no-store' });
+                        if (resp.ok) {
+                            const cfg = await resp.json();
+                            if (cfg.promocion) this.promoText = cfg.promocion;
+                            if (Array.isArray(cfg.categorias) && cfg.categorias.length) { CATEGORIAS = cfg.categorias; this.categorias = cfg.categorias; }
+                            if (cfg.horario && cfg.horario.dias) { this.adminHorario = cfg.horario; this.actualizarTextoHorario(); }
+                            if (cfg.telefono) this.telefono = cfg.telefono;
+                            if (cfg.whatsapp) this.whatsapp = cfg.whatsapp;
+                        }
+                    } catch (e) { console.warn('[EL TITI] No se pudo leer configuracion.json:', e); }
+
+                    try {
+                        const resp = await fetch('data/productos.json', { cache: 'no-store' });
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            const lista = Array.isArray(data) ? data : (data.productos || []);
+                            if (lista.length) {
+                                this.productos = lista.map(p => ({
+                                    ...p,
+                                    precio: Number(p.precio) || 0,
+                                    etiquetas: Array.isArray(p.etiquetas) ? p.etiquetas : [],
+                                    agotado: !!p.agotado,
+                                    precio_editable: Number(p.precio) || 0
+                                }));
+                                guardarProductosCache(this.productos);
+                            }
+                        }
+                    } catch (e) { console.warn('[EL TITI] No se pudo leer productos.json:', e); }
+                },
+                async initApp() {
+                    // 0. Contenido base desde Pages CMS
+                    await this.cargarContenidoBase();
+
+                    // 1. Cargar caché local (solo si el JSON no cargó productos)
+                    if (!this.productos.length) {
+                        const cache = cargarProductosCache();
+                        if (cache.length) {
+                            this.productos = cache.map(p => ({ ...p, precio_editable: p.precio }));
+                        }
                     }
 
                     // 2. Sincronización en tiempo real con Firebase (onValue)
@@ -618,6 +657,7 @@
                         precio: parseInt(this.newProduct.precio),
                         imagen: this.newProduct.imagen || '',
                         categoria: CATEGORIAS.includes(this.newProduct.categoria) ? this.newProduct.categoria : CATEGORIAS[0],
+                        etiquetas: [],
                         agotado: false
                     };
                     const res = await crearProductoFirebase(id, datos);

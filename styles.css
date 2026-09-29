@@ -250,6 +250,23 @@
             top: 6px;
             right: 6px;
         }
+        .menu-card .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            padding: 8px 10px 0;
+        }
+        .menu-card .badge-etiqueta {
+            background: rgba(255, 195, 0, 0.15);
+            color: var(--amarillo);
+            border: 1px solid rgba(255, 195, 0, 0.35);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 30px;
+            line-height: 1.4;
+        }
         .menu-card .btn-pedido {
             background: var(--amarillo);
             color: var(--negro-profundo);
