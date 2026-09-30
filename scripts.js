@@ -99,6 +99,8 @@
                 imagen: obj[id].imagen || '',
                 categoria: obj[id].categoria || 'Adicionales',
                 etiquetas: Array.isArray(obj[id].etiquetas) ? obj[id].etiquetas : [],
+                tiempo: Number(obj[id].tiempo) || 0,
+                destacado: !!obj[id].destacado,
                 agotado: !!obj[id].agotado
             }));
     }
@@ -157,6 +159,8 @@
                             imagen: p.imagen || '',
                             categoria: CATEGORIAS.includes(p.categoria) ? p.categoria : 'Adicionales',
                             etiquetas: Array.isArray(p.etiquetas) ? p.etiquetas : [],
+                            tiempo: Number(p.tiempo) || 0,
+                            destacado: !!p.destacado,
                             agotado: !!p.agotado
                         };
                     });
@@ -336,6 +340,9 @@
                         const productos = this.productosFiltrados.filter(p => p.categoria === cat);
                         return { nombre: cat, emoji: this.emojisCategoria[cat] || '🍽️', productos, count: productos.length };
                     });
+                },
+                get destacados() {
+                    return this.productos.filter(p => !!p.destacado && !p.agotado);
                 },
                 get productosAdminFiltrados() {
                     const q = this.adminBusqueda.trim().toLowerCase();
@@ -658,6 +665,8 @@
                         imagen: this.newProduct.imagen || '',
                         categoria: CATEGORIAS.includes(this.newProduct.categoria) ? this.newProduct.categoria : CATEGORIAS[0],
                         etiquetas: [],
+                        tiempo: 0,
+                        destacado: false,
                         agotado: false
                     };
                     const res = await crearProductoFirebase(id, datos);

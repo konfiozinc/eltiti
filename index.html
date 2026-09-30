@@ -125,6 +125,36 @@
             </template>
         </div>
 
+        <!-- ===== LOS MÁS PEDIDOS ===== -->
+        <div class="destacados-section" x-show="destacados.length > 0">
+            <div class="categoria-header">
+                <span class="categoria-emoji">🔥</span>
+                <span class="categoria-titulo">LOS MÁS PEDIDOS</span>
+                <span class="categoria-count" x-text="destacados.length"></span>
+            </div>
+            <div class="categoria-separator"></div>
+            <div class="menu-grid">
+                <template x-for="(p, idx) in destacados" :key="p.id">
+                    <div class="menu-card" :class="{ 'agotado': p.agotado }">
+                        <img :src="p.imagen || 'assets/logo/no-image.webp'" :alt="p.nombre" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                        <span class="badge-agotado" x-show="p.agotado">AGOTADO</span>
+                        <div class="badges" x-show="Array.isArray(p.etiquetas) && p.etiquetas.length">
+                            <template x-for="e in p.etiquetas" :key="e">
+                                <span class="badge-etiqueta" x-text="e"></span>
+                            </template>
+                        </div>
+                        <span class="badge-tiempo" x-text="Number(p.tiempo) > 0 ? '⏱ ' + p.tiempo + ' min' : '⏱ Por confirmar'"></span>
+                        <div class="name" x-text="p.nombre"></div>
+                        <div class="price" x-text="'$' + parseInt(p.precio).toLocaleString('es-CO')"></div>
+                        <button class="btn-pedido" :disabled="p.agotado"
+                            @click="p.agotado ? null : agregarAlCarrito(p)">
+                            <span x-text="p.agotado ? '❌ AGOTADO' : '🛒 Agregar'"></span>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
         <div class="menu-grid-wrap">
             <template x-for="grupo in categoriasConProductos" :key="grupo.nombre">
                 <div class="categoria-group" :id="'cat-' + grupo.nombre.toLowerCase()" x-show="grupo.count > 0">
@@ -144,6 +174,7 @@
                                         <span class="badge-etiqueta" x-text="e"></span>
                                     </template>
                                 </div>
+                                <span class="badge-tiempo" x-text="Number(p.tiempo) > 0 ? '⏱ ' + p.tiempo + ' min' : '⏱ Por confirmar'"></span>
                                 <div class="name" x-text="p.nombre"></div>
                                 <div class="price" x-text="'$' + parseInt(p.precio).toLocaleString('es-CO')"></div>
                                 <button class="btn-pedido" :disabled="p.agotado"

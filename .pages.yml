@@ -19,6 +19,8 @@ content:
           - { name: categoria, label: Categoría, type: select, options: [Hamburguesas, Salchipapas, Chuzos, Bebidas, Adicionales] }
           - { name: precio, label: Precio, type: number }
           - { name: imagen, label: Imagen, type: image }
+          - { name: tiempo, label: Tiempo de preparación (min · 0 = por confirmar), type: number }
+          - { name: destacado, label: Destacado (Los más pedidos), type: boolean }
           - { name: etiquetas, label: Etiquetas (emojis: 🌱🌶️⏱️🔥🏷️), type: list, item_type: text }
           - { name: agotado, label: Agotado (ocultar del menú), type: boolean }
 
