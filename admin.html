@@ -230,6 +230,18 @@ input,select,textarea{font-family:inherit;font-size:15px}
 
 <script src="admin-config.js"></script>
 <script>
+// ⚠️ Instancias de Firebase FUERA del estado reactivo de Alpine:
+// Alpine envuelve en Proxy todo lo que vive en x-data y eso rompe
+// los métodos internos de Firebase (IndexMap/ChildrenNode).
+let firebaseAuth = null;
+let firebaseDB = null;
+
+function initFirebase(){
+  if (firebase.apps.length === 0) firebase.initializeApp(window.ADMIN_CONFIG.firebase);
+  firebaseAuth = firebase.auth();
+  firebaseDB = firebase.database();
+}
+
 function admin(){
   return {
     cfg: window.ADMIN_CONFIG,
@@ -244,10 +256,8 @@ function admin(){
     form: { nombre:'', categoria:'', precio:0, descripcion:'', tiempo:0, imagen:'', destacado:false, disponible:true },
 
     init(){
-      if (firebase.apps.length === 0) firebase.initializeApp(this.cfg.firebase);
-      this.auth = firebase.auth();
-      this.db = firebase.database();
-      this.auth.onAuthStateChanged(u => {
+      initFirebase();
+      firebaseAuth.onAuthStateChanged(u => {
         this.usuario = u;
         this.authReady = true;
         if (u) this.escuchar();
@@ -255,10 +265,10 @@ function admin(){
     },
 
     escuchar(){
-      const ref = this.db.ref(this.cfg.ruta + '/productos');
-      ref.on('value', snap => {
-        const data = snap.val();
-        this.productos = data ? Object.keys(data).filter(k => data[k]).map(k => ({ id: k, ...data[k] })) : [];
+      firebaseDB.ref(this.cfg.ruta + '/productos').on('value', snap => {
+        const data = snap.val() || {};
+        const lista = Object.keys(data).filter(k => data[k]).map(k => ({ id: k, ...data[k] }));
+        this.productos = JSON.parse(JSON.stringify(lista));
         this.cargando = false;
       }, err => { this.cargando = false; this.toastMsg('Error al cargar: ' + err.message); });
     },
@@ -278,13 +288,13 @@ function admin(){
       this.loginError = '';
       if (!this.email.trim() || !this.password) { this.loginError = 'Ingresa correo y contraseña.'; return; }
       this.loginLoading = true;
-      this.auth.signInWithEmailAndPassword(this.email.trim(), this.password)
+      firebaseAuth.signInWithEmailAndPassword(this.email.trim(), this.password)
         .then(() => { this.password = ''; })
         .catch(e => { this.loginError = 'No se pudo entrar: ' + (e.code === 'auth/invalid-credential' ? 'correo o contraseña incorrectos' : e.message); })
         .finally(() => this.loginLoading = false);
     },
 
-    logout(){ this.auth.signOut(); this.productos = []; },
+    logout(){ firebaseAuth.signOut(); this.productos = []; },
 
     nuevo(){
       this.editandoId = null;
@@ -312,7 +322,7 @@ function admin(){
         agotado: !this.form.disponible,
         etiquetas: []
       };
-      const ref = this.db.ref(this.cfg.ruta + '/productos');
+      const ref = firebaseDB.ref(this.cfg.ruta + '/productos');
       const op = this.editandoId ? ref.child(this.editandoId).update(datos) : ref.push(datos);
       op.then(() => { this.modal = false; this.toastMsg('✓ Producto guardado'); })
         .catch(e => this.toastMsg('Error: ' + e.message))
@@ -321,17 +331,17 @@ function admin(){
 
     eliminar(p){
       if (!confirm('¿Eliminar "' + p.nombre + '"? Esta acción no se puede deshacer.')) return;
-      this.db.ref(this.cfg.ruta + '/productos/' + p.id).remove()
+      firebaseDB.ref(this.cfg.ruta + '/productos/' + p.id).remove()
         .then(() => this.toastMsg('🗑 Producto eliminado'))
         .catch(e => this.toastMsg('Error: ' + e.message));
     },
 
     toggleAgotado(p){
-      this.db.ref(this.cfg.ruta + '/productos/' + p.id).update({ agotado: !p.agotado })
+      firebaseDB.ref(this.cfg.ruta + '/productos/' + p.id).update({ agotado: !p.agotado })
         .catch(e => this.toastMsg('Error: ' + e.message));
     },
     toggleDestacado(p){
-      this.db.ref(this.cfg.ruta + '/productos/' + p.id).update({ destacado: !p.destacado })
+      firebaseDB.ref(this.cfg.ruta + '/productos/' + p.id).update({ destacado: !p.destacado })
         .catch(e => this.toastMsg('Error: ' + e.message));
     },
 
