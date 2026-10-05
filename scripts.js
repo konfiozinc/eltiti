@@ -54,6 +54,8 @@
     const refResenas       = fbDB.ref('menu/reseñas');
     const refBackup        = fbDB.ref('menu_backup');
     const refMeta          = fbDB.ref('menu/meta');
+    const refPedidos       = fbDB.ref('menu/pedidos');
+    const refContador      = fbDB.ref('menu/meta/contadorPedidos');
 
     // ═══════════════════════════════════════════════════════════════
     //  ESTADO GLOBAL DE SINCRONIZACIÓN (Alpine Store)
@@ -318,6 +320,12 @@
                 // ── Carrito ──
                 carritoOpen: false,
                 carrito: [],
+
+                // ── Checkout (datos del cliente + guardado del pedido en RTDB) ──
+                checkoutOpen: false,
+                checkout: { nombre: '', telefono: '', direccion: '', metodoPago: 'Efectivo', notas: '' },
+                enviandoPedido: false,
+                metodosPago: ['Efectivo', 'Nequi', 'Daviplata', 'Transferencia'],
 
                 // ═══════════════ GETTERS ═══════════════
                 get syncStatus() {
@@ -604,13 +612,76 @@
                 vaciarCarrito() { if (confirm('¿Vaciar el carrito?')) this.carrito = []; },
                 enviarPedido() {
                     if (!this.carrito.length) return;
-                    let msg = '🍔 *PEDIDO - EL TITI Comidas Rápidas*\n━━━━━━━━━━━━━━━━━━━━\n';
+                    // Paso 1: pedir los datos del cliente antes de abrir WhatsApp
+                    this.carritoOpen = false;
+                    this.checkoutOpen = true;
+                },
+
+                async confirmarPedido() {
+                    if (!this.carrito.length) return;
+                    const c = this.checkout;
+                    if (!c.nombre.trim() || !c.telefono.trim() || !c.direccion.trim()) {
+                        this.mostrarToast('⚠️ Completa nombre, teléfono y dirección');
+                        return;
+                    }
+                    if (this.enviandoPedido) return;
+                    this.enviandoPedido = true;
+
+                    // 1) Número de pedido incremental (transacción atómica)
+                    let numeroPedido = 'ELT-000';
+                    try {
+                        const res = await refContador.transaction((v) => (v || 0) + 1);
+                        if (res && res.snapshot && res.snapshot.val()) {
+                            numeroPedido = 'ELT-' + String(res.snapshot.val()).padStart(3, '0');
+                        }
+                    } catch (e) { console.warn('[EL TITI] contador falló, se usa por defecto:', e); }
+
+                    // 2) Código corto de consulta pública
+                    const codigoConsulta = Math.random().toString(36).slice(2, 6).toUpperCase();
+
+                    // 3) Guardar el pedido en RTDB (menu/pedidos)
+                    const pedido = {
+                        numeroPedido,
+                        codigoConsulta,
+                        cliente: {
+                            nombre: c.nombre.trim(),
+                            telefono: c.telefono.trim(),
+                            direccion: c.direccion.trim(),
+                            metodoPago: c.metodoPago,
+                            notas: c.notas.trim()
+                        },
+                        items: this.carrito.map(i => ({ productoId: i.id, nombre: i.nombre, precio: i.precio, cantidad: i.cantidad })),
+                        total: this.totalPrecio,
+                        estado: 'recibido',
+                        fechaCreacion: firebase.database.ServerValue.TIMESTAMP,
+                        fechaActualizacion: firebase.database.ServerValue.TIMESTAMP
+                    };
+                    try {
+                        await refPedidos.push(pedido);
+                    } catch (e) {
+                        console.error('[EL TITI] No se pudo guardar el pedido:', e);
+                        this.mostrarToast('⚠️ No se guardó en el panel, pero continuamos por WhatsApp');
+                    }
+
+                    // 4) Abrir WhatsApp con el mensaje de siempre + datos del cliente
+                    let msg = '🍔 *PEDIDO - EL TITI Comidas Rápidas*\n';
+                    msg += '🪪 ' + c.nombre + ' · 📞 ' + c.telefono + '\n';
+                    msg += '━━━━━━━━━━━━━━━━━━━━\n';
                     this.carrito.forEach(i => {
                         msg += i.emoji + ' *' + i.nombre + '*\n   Cantidad: ' + i.cantidad + '\n   Precio: $' + (i.precio * i.cantidad).toLocaleString('es-CO') + '\n\n';
                     });
-                    msg += '━━━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $' + this.totalPrecio.toLocaleString('es-CO') + '*\n\n📍 Por favor confirma tu dirección.';
+                    msg += '━━━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $' + this.totalPrecio.toLocaleString('es-CO') + '*\n';
+                    msg += '📍 Dirección: ' + c.direccion + '\n';
+                    msg += '💳 Pago: ' + c.metodoPago + '\n';
+                    if (c.notas) msg += '📝 Notas: ' + c.notas + '\n';
+                    msg += '\n🆔 Pedido ' + numeroPedido;
                     window.location.href = 'whatsapp://send?phone=57' + this.telefono + '&text=' + encodeURIComponent(msg);
-                    this.carritoOpen = false;
+
+                    // 5) Reset del estado
+                    this.carrito = [];
+                    this.checkoutOpen = false;
+                    this.checkout = { nombre: '', telefono: '', direccion: '', metodoPago: 'Efectivo', notas: '' };
+                    this.enviandoPedido = false;
                 },
 
                 // ═══════════════ RESEÑAS (push - tiempo real) ═══════════════

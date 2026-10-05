@@ -603,6 +603,49 @@
         </div>
     </div>
 
+    <!-- ===== CHECKOUT (datos del cliente antes de confirmar) ===== -->
+    <div class="cart-overlay" x-show="checkoutOpen" x-cloak
+        :style="checkoutOpen ? 'display:flex' : 'display:none'"
+        @click.self="checkoutOpen=false">
+        <div class="cart-sheet" style="max-height:92vh;overflow-y:auto;">
+            <div class="cart-handle"></div>
+            <div class="cart-header">
+                <span class="cart-title">📋 TUS DATOS</span>
+                <button type="button" @click="checkoutOpen=false" style="border:none;background:none;font-size:24px;cursor:pointer;color:#999;">✕</button>
+            </div>
+            <div style="padding:14px 20px 24px;display:flex;flex-direction:column;gap:13px;">
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:800;color:#8a8a8a;letter-spacing:.4px;margin-bottom:5px;">NOMBRE *</label>
+                    <input type="text" x-model="checkout.nombre" placeholder="Tu nombre" style="width:100%;padding:13px 14px;border:1.5px solid #E2E8F0;border-radius:12px;font-size:15px;background:#fff;color:#111;">
+                </div>
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:800;color:#8a8a8a;letter-spacing:.4px;margin-bottom:5px;">TELÉFONO *</label>
+                    <input type="tel" inputmode="tel" x-model="checkout.telefono" placeholder="Tu teléfono" style="width:100%;padding:13px 14px;border:1.5px solid #E2E8F0;border-radius:12px;font-size:15px;background:#fff;color:#111;">
+                </div>
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:800;color:#8a8a8a;letter-spacing:.4px;margin-bottom:5px;">DIRECCIÓN *</label>
+                    <input type="text" x-model="checkout.direccion" placeholder="¿Dónde entregamos tu pedido?" style="width:100%;padding:13px 14px;border:1.5px solid #E2E8F0;border-radius:12px;font-size:15px;background:#fff;color:#111;">
+                </div>
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:800;color:#8a8a8a;letter-spacing:.4px;margin-bottom:5px;">MÉTODO DE PAGO</label>
+                    <select x-model="checkout.metodoPago" style="width:100%;padding:13px 14px;border:1.5px solid #E2E8F0;border-radius:12px;font-size:15px;background:#fff;color:#111;">
+                        <template x-for="m in metodosPago" :key="m">
+                            <option x-text="m" :value="m"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:800;color:#8a8a8a;letter-spacing:.4px;margin-bottom:5px;">NOTAS (opcional)</label>
+                    <textarea x-model="checkout.notas" rows="2" placeholder="Ej. sin cebolla, piso 3, timbre 2" style="width:100%;padding:13px 14px;border:1.5px solid #E2E8F0;border-radius:12px;font-size:15px;background:#fff;color:#111;resize:vertical;"></textarea>
+                </div>
+                <button type="button" class="btn-enviar-pedido" @click="confirmarPedido()" :disabled="enviandoPedido" style="width:100%;">
+                    <i class="fab fa-whatsapp" style="margin-right:8px;font-size:18px;"></i>
+                    <span x-text="enviandoPedido ? 'Enviando…' : 'Confirmar pedido por WhatsApp'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== MODAL QR GRANDE ===== -->
     <div x-show="qrModalOpen" x-cloak
         :style="qrModalOpen ? 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);' : 'display:none'"
