@@ -5,7 +5,7 @@
     "inicio": 18,
     "fin": 2
   },
-  "categorias": ["Hamburguesas", "Salchipapas", "Chuzos", "Bebidas", "Adicionales"],
+  "categorias": ["Hamburguesas", "Salchipapas", "Chuzos", "Picadas", "Bebidas", "Adicionales"],
   "telefono": "3014387942",
   "whatsapp": "573014387942",
   "ubicacion": "Barrio Nueva Jerusalén, Bello, Antioquia"

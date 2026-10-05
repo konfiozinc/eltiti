@@ -4,7 +4,7 @@ window.ADMIN_CONFIG = {
   nombre: 'EL TITI',
   ruta: 'menu',            // namespace en RTDB/Storage (El Titi ya vive en /menu/)
   color: '#B22222',
-  categorias: ['Hamburguesas', 'Salchipapas', 'Chuzos', 'Bebidas', 'Adicionales'],
+  categorias: ['Hamburguesas', 'Salchipapas', 'Chuzos', 'Picadas', 'Bebidas', 'Adicionales'],
   cloudinary: {
     cloudName: 'f07x0wga',
     uploadPreset: 'menu-digital'

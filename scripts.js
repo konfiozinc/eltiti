@@ -5,11 +5,12 @@
     const STORAGE_KEY_HORARIO   = 'eltiti_horario';
     const STORAGE_KEY_PROMO     = 'eltiti_promo';
 
-    let CATEGORIAS = ['Hamburguesas', 'Salchipapas', 'Chuzos', 'Bebidas', 'Adicionales'];
+    let CATEGORIAS = ['Hamburguesas', 'Salchipapas', 'Chuzos', 'Picadas', 'Bebidas', 'Adicionales'];
     const EMOJIS_CATEGORIA = {
         'Hamburguesas': '🍔',
         'Salchipapas':  '🍟',
         'Chuzos':       '🌭',
+        'Picadas':      '🍗',
         'Bebidas':      '🥤',
         'Adicionales':  '➕'
     };
