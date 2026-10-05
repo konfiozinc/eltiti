@@ -666,11 +666,11 @@
                     // 4) Abrir WhatsApp con el mensaje de siempre + datos del cliente
                     let msg = '🍔 *PEDIDO - EL TITI Comidas Rápidas*\n';
                     msg += '👤 ' + c.nombre + ' · ' + c.telefono + '\n';
-                    msg += '━━━━━━━━━━━━━━━━━━━━\n';
+                    msg += '\n';
                     this.carrito.forEach(i => {
                         msg += i.emoji + ' *' + i.nombre + '*\n   Cantidad: ' + i.cantidad + '\n   Precio: $' + (i.precio * i.cantidad).toLocaleString('es-CO') + '\n\n';
                     });
-                    msg += '━━━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $' + this.totalPrecio.toLocaleString('es-CO') + '*\n';
+                    msg += '\n💰 *TOTAL: $' + this.totalPrecio.toLocaleString('es-CO') + '*\n';
                     msg += '📍 Dirección: ' + c.direccion + '\n';
                     msg += '💳 Pago: ' + c.metodoPago + '\n';
                     if (c.notas) msg += '📝 Notas: ' + c.notas + '\n';
