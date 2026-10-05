@@ -1,0 +1,32 @@
+{
+  "rules": {
+    ".read": true,
+    "menu": {
+      "productos": { ".write": "auth != null" },
+      "promo": { ".write": "auth != null" },
+      "horario": { ".write": "auth != null" },
+      "meta": {
+        "contadorPedidos": { ".write": true },
+        ".write": "auth != null"
+      },
+      "reseñas": { ".write": true },
+      "pedidos": { ".write": true },
+      ".write": "auth != null"
+    },
+    "colsabor": {
+      "productos": { ".write": "auth != null" },
+      "promo": { ".write": "auth != null" },
+      "horario": { ".write": "auth != null" },
+      "meta": {
+        "contadorPedidos": { ".write": true },
+        ".write": "auth != null"
+      },
+      "reseñas": { ".write": true },
+      "pedidos": { ".write": true },
+      ".write": "auth != null"
+    },
+    "menu_backup": {
+      ".write": "auth != null"
+    }
+  }
+}
