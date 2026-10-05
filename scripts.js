@@ -600,7 +600,7 @@
                 agregarAlCarrito(p) {
                     const idx = this.carrito.findIndex(i => i.id === p.id);
                     if (idx >= 0) { this.carrito[idx].cantidad++; }
-                    else { this.carrito.push({ id: p.id, nombre: p.nombre, precio: p.precio, emoji: p.emoji || '🍔', cantidad: 1 }); }
+                    else { this.carrito.push({ id: p.id, nombre: p.nombre, precio: p.precio, emoji: p.emoji || EMOJIS_CATEGORIA[p.categoria] || '🍔', cantidad: 1 }); }
                     this.mostrarToast('🛒 ' + p.nombre + ' agregado');
                 },
                 quitarUno(id) {
