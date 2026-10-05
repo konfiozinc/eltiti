@@ -80,6 +80,24 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .pbtn:disabled{opacity:.4;cursor:not-allowed}
 .empty{text-align:center;color:var(--muted);padding:40px 20px;background:var(--card);border-radius:16px;border:1px dashed var(--line)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 18px;border-radius:12px;font-size:.85rem;font-weight:600;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.3);pointer-events:none}
+
+/* ===== ALERTAS SONORAS ===== */
+.audio-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:14px;padding:11px 13px;margin-bottom:14px}
+.audio-bar span{font-size:.8rem;font-weight:700;color:#92400E;line-height:1.3}
+.audio-bar button{border:none;background:#D97706;color:#fff;border-radius:10px;padding:10px 14px;font-size:.8rem;font-weight:800;white-space:nowrap;flex-shrink:0}
+.audio-bar button:hover{background:#B45309}
+.audio-toggle{background:rgba(255,255,255,.16);border:none;color:#fff;border-radius:10px;padding:8px 12px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.audio-toggle.on{background:rgba(61,220,132,.28)}
+.pcard.nuevo{border-color:#F59E0B;background:#FFFBEB;animation:flashNuevo 3s ease-out 1}
+@keyframes flashNuevo{
+  0%{box-shadow:0 0 0 0 rgba(245,158,11,.75)}
+  15%{box-shadow:0 0 0 7px rgba(245,158,11,0)}
+  30%{box-shadow:0 0 0 0 rgba(245,158,11,.75)}
+  45%{box-shadow:0 0 0 7px rgba(245,158,11,0)}
+  60%{box-shadow:0 0 0 0 rgba(245,158,11,.6)}
+  100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}
+}
+.badge-nuevo{font-size:.62rem;font-weight:800;background:#D97706;color:#fff;border-radius:99px;padding:2px 8px;margin-left:7px;vertical-align:middle;letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -101,9 +119,19 @@ input,select,textarea{font-family:inherit;font-size:15px}
 <div x-data="admin" x-init="init()" x-show="usuario" x-cloak>
   <div class="app-head">
     <div class="t"><span class="dot"></span> Pedidos · EL TITI</div>
-    <button @click="logout()">Cerrar sesión</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="audio-toggle" :class="sonidoActivado && 'on'" @click="toggleSonido()"
+        x-text="sonidoActivado ? '🔊 Sonido ON' : '🔇 Sonido OFF'"></button>
+      <button @click="logout()">Cerrar sesión</button>
+    </div>
   </div>
   <div class="wrap">
+    <!-- ===== ACTIVAR ALERTAS SONORAS ===== -->
+    <div class="audio-bar" x-show="!sonidoActivado">
+      <span>🔔 Activá las alertas para escuchar cada pedido nuevo</span>
+      <button @click="activarSonido()">Activar sonido</button>
+    </div>
+
     <!-- Contadores -->
     <div class="counters">
       <div class="counter"><div class="n" x-text="contadores.todos"></div><div class="l">Todos</div></div>
@@ -125,10 +153,11 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <div class="list" x-show="!cargando">
       <div class="empty" x-show="!filtrados.length">No hay pedidos en este estado.</div>
       <template x-for="p in filtrados" :key="p.id">
-        <div class="pcard">
+        <div class="pcard" :class="nuevos[p.id] ? 'nuevo' : ''">
           <div class="pcard-top">
             <div>
               <span class="pnum" x-text="p.numeroPedido || 'PEDIDO'"></span>
+              <span class="badge-nuevo" x-show="nuevos[p.id]">NUEVO</span>
               <div class="pcod" x-text="'Consulta: ' + (p.codigoConsulta || '—')"></div>
             </div>
             <span class="badge" :style="'background:' + estadoColor[p.estado]" x-text="estadoLabel[p.estado]"></span>
@@ -172,6 +201,17 @@ input,select,textarea{font-family:inherit;font-size:15px}
 let firebaseAuth = null;
 let firebaseDB = null;
 
+// Elemento de audio FUERA del estado reactivo de Alpine (mismo motivo que Firebase:
+// el Proxy de Alpine rompe las propiedades internas del objeto).
+let audioAlerta = null;
+function getAudioAlerta(){
+  if (!audioAlerta) {
+    audioAlerta = new Audio('assets/audio/alerta-pedido.mp3');
+    audioAlerta.preload = 'auto';
+  }
+  return audioAlerta;
+}
+
 function initFirebase(){
   if (firebase.apps.length === 0) firebase.initializeApp(window.ADMIN_CONFIG.firebase);
   firebaseAuth = firebase.auth();
@@ -184,6 +224,7 @@ function admin(){
     usuario: null, authReady: false,
     email: '', password: '', loginError: '', loginLoading: false,
     pedidos: [], filtro: 'todos', cargando: true, toast: '',
+    sonidoActivado: false, idsVistos: null, nuevos: {},
     filtros: [
       { key:'todos', label:'Todos' },
       { key:'recibido', label:'Recibido' },
@@ -199,6 +240,7 @@ function admin(){
 
     init(){
       initFirebase();
+      try { this.sonidoActivado = localStorage.getItem(this.claveSonido) === '1'; } catch(e) {}
       firebaseAuth.onAuthStateChanged(u => {
         this.usuario = u;
         this.authReady = true;
@@ -206,11 +248,100 @@ function admin(){
       });
     },
 
+    // Clave por panel: El Titi y Colsabor comparten origen (konfiozinc.github.io),
+    // así que localStorage se comparte si no se namespacea.
+    get claveSonido(){ return 'sonidoActivado_' + this.cfg.ruta; },
+
+    activarSonido(){
+      const a = getAudioAlerta();
+      try { a.currentTime = 0; } catch(e) {}
+      a.volume = 1;
+      const pr = a.play();
+      if (!pr || !pr.then) { this.marcarSonidoActivo(); return; }
+      pr.then(() => { this.marcarSonidoActivo(); this.pedirPermisoNotificaciones(); })
+        .catch(err => this.toastMsg('⚠️ El navegador bloqueó el audio: ' + ((err && err.message) ? err.message : 'error')));
+    },
+    marcarSonidoActivo(){
+      this.sonidoActivado = true;
+      try { localStorage.setItem(this.claveSonido, '1'); } catch(e) {}
+      this.toastMsg('🔔 Alertas sonoras activadas');
+    },
+    toggleSonido(){
+      if (this.sonidoActivado) {
+        this.sonidoActivado = false;
+        try { localStorage.setItem(this.claveSonido, '0'); } catch(e) {}
+        this.toastMsg('🔇 Alertas sonoras desactivadas');
+      } else {
+        this.activarSonido();
+      }
+    },
+
+    pedirPermisoNotificaciones(){
+      try {
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().catch(() => {});
+        }
+      } catch(e) {}
+    },
+
+    reproducirAlerta(){
+      if (!this.sonidoActivado) return;
+      const a = getAudioAlerta();
+      try { a.currentTime = 0; } catch(e) {}
+      const pr = a.play();
+      if (pr && pr.catch) pr.catch(() => {
+        this.sonidoActivado = false;
+        try { localStorage.setItem(this.claveSonido, '0'); } catch(e) {}
+        this.toastMsg('⚠️ El navegador bloqueó el sonido. Tocá "Activar sonido" de nuevo.');
+      });
+    },
+
+    notificarPedido(p){
+      try {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        const total = '$' + Number(p.total || 0).toLocaleString('es-CO');
+        const n = new Notification('🔔 Nuevo pedido ' + (p.numeroPedido || ''), {
+          body: ((p.cliente && p.cliente.nombre) ? p.cliente.nombre : 'Cliente') + ' · ' + total,
+          tag: p.id,
+          icon: 'assets/icons/icon-192.png'
+        });
+        setTimeout(() => { try { n.close(); } catch(e) {} }, 15000);
+      } catch(e) {}
+    },
+
+    alertaNuevoPedido(p){
+      this.reproducirAlerta();
+      this.notificarPedido(p);
+      this.toastMsg('🔔 Nuevo pedido ' + (p.numeroPedido || '') + ((p.cliente && p.cliente.nombre) ? ' — ' + p.cliente.nombre : ''));
+    },
+
+    marcarNuevo(id){
+      this.nuevos = Object.assign({}, this.nuevos, { [id]: true });
+      setTimeout(() => {
+        const n = Object.assign({}, this.nuevos);
+        delete n[id];
+        this.nuevos = n;
+      }, 15000);
+    },
+
     escuchar(){
       firebaseDB.ref(this.cfg.ruta + '/pedidos').on('value', snap => {
         const data = snap.val() || {};
         const lista = Object.keys(data).filter(k => data[k]).map(k => ({ id: k, ...data[k] }));
         lista.sort((a, b) => (b.fechaCreacion || 0) - (a.fechaCreacion || 0));
+
+        // Detección de pedidos nuevos. La PRIMERA carga no alerta (evita
+        // disparar el sonido por los pedidos que ya existían al abrir el panel).
+        if (this.idsVistos === null) {
+          this.idsVistos = lista.map(p => p.id);
+        } else {
+          const recientes = lista.filter(p => this.idsVistos.indexOf(p.id) === -1);
+          if (recientes.length) {
+            recientes.forEach(p => { this.idsVistos.push(p.id); this.marcarNuevo(p.id); });
+            this.alertaNuevoPedido(recientes[0]);
+          }
+        }
+
         this.pedidos = JSON.parse(JSON.stringify(lista));
         this.cargando = false;
       }, err => { this.cargando = false; this.toastMsg('Error al cargar: ' + err.message); });

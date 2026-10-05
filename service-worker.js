@@ -3,7 +3,7 @@
 //  Cachea el shell de la app y los assets locales para uso offline
 // ══════════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'eltiti-cache-v4';
+const CACHE_NAME = 'eltiti-cache-v5';
 
 const PRECACHE_URLS = [
   './',
@@ -20,6 +20,9 @@ const PRECACHE_URLS = [
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/favicon.png',
+
+  // Audio de alerta del panel de pedidos
+  './assets/audio/alerta-pedido.mp3',
 
   // Productos
   './assets/productos/hamburguesa-simple.webp',
