@@ -192,10 +192,11 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <div class="empty" x-show="cargando">Cargando pedidos…</div>
 
     <div class="build-tag">panel v2 · alertas sonoras</div>
+
+    <!-- Toast DENTRO del x-data: fuera de él Alpine no lo inicializa y nunca se muestra -->
+    <div class="toast" x-show="toast" x-text="toast" x-cloak></div>
   </div>
 </div>
-
-<div class="toast" x-show="toast" x-text="toast" x-cloak></div>
 
 <script src="admin-config.js"></script>
 <script>
