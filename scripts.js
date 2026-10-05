@@ -664,17 +664,17 @@
                     }
 
                     // 4) Abrir WhatsApp con el mensaje de siempre + datos del cliente
-                    let msg = '🍔 *PEDIDO - EL TITI Comidas Rápidas*\n';
-                    msg += '👤 ' + c.nombre + ' · ' + c.telefono + '\n';
+                    let msg = '\u{1F354} *PEDIDO - EL TITI Comidas R\u00E1pidas*\n';
+                    msg += '\u{1F464} ' + c.nombre + ' \u00B7 ' + c.telefono + '\n';
                     msg += '\n';
                     this.carrito.forEach(i => {
                         msg += i.emoji + ' *' + i.nombre + '*\n   Cantidad: ' + i.cantidad + '\n   Precio: $' + (i.precio * i.cantidad).toLocaleString('es-CO') + '\n\n';
                     });
-                    msg += '\n💰 *TOTAL: $' + this.totalPrecio.toLocaleString('es-CO') + '*\n';
-                    msg += '📍 Dirección: ' + c.direccion + '\n';
-                    msg += '💳 Pago: ' + c.metodoPago + '\n';
-                    if (c.notas) msg += '📝 Notas: ' + c.notas + '\n';
-                    msg += '\n🆔 Pedido ' + numeroPedido;
+                    msg += '\n\u{1F4B0} *TOTAL: $' + this.totalPrecio.toLocaleString('es-CO') + '*\n';
+                    msg += '\u{1F4CD} Direcci\u00F3n: ' + c.direccion + '\n';
+                    msg += '\u{1F4B3} Pago: ' + c.metodoPago + '\n';
+                    if (c.notas) msg += '\u{1F4DD} Notas: ' + c.notas + '\n';
+                    msg += '\n\u{1F194} Pedido ' + numeroPedido;
                     window.location.href = 'whatsapp://send?phone=57' + this.telefono + '&text=' + encodeURIComponent(msg);
 
                     // 5) Reset del estado
