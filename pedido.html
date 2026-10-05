@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#B22222">
+<title>Tu Pedido · EL TITI</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+
+<style>
+:root{ --accent:#B22222; --accent2:#E74C3C; --bg:#F4F6F8; --card:#FFFFFF; --txt:#1A202C; --muted:#6B7280; --line:#E2E8F0; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+[x-cloak]{display:none}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 32px}
+
+.top{background:var(--accent);color:#fff;padding:24px 16px 34px;border-radius:0 0 28px 28px;text-align:center}
+.logo{width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:30px;margin:0 auto 10px}
+.top h1{font-size:1.25rem;font-weight:900}
+.top .sub{font-size:.85rem;opacity:.88;margin-top:2px}
+
+.card{background:var(--card);border-radius:20px;padding:20px;box-shadow:0 16px 40px rgba(0,0,0,.08);margin-top:-18px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.num{font-weight:900;font-size:1.05rem}
+.badge{font-size:.72rem;font-weight:800;padding:5px 12px;border-radius:99px;color:#fff;white-space:nowrap}
+
+.stepper{display:flex;margin:24px 0 20px}
+.step{flex:1;text-align:center;position:relative}
+.step::before{content:'';position:absolute;top:14px;left:-50%;width:100%;height:3px;background:var(--line);z-index:0}
+.step:first-child::before{display:none}
+.dot{width:28px;height:28px;border-radius:50%;background:var(--line);color:var(--muted);display:grid;place-items:center;font-size:.78rem;font-weight:800;margin:0 auto 6px;position:relative;z-index:1;transition:.2s}
+.step .lbl{font-size:.68rem;color:var(--muted);font-weight:700}
+.step.done .dot{background:var(--accent);color:#fff}
+.step.active .dot{background:var(--accent);color:#fff;box-shadow:0 0 0 5px rgba(178,34,34,.16)}
+.step.done::before{background:var(--accent)}
+.step.done .lbl,.step.active .lbl{color:var(--accent)}
+
+.cancel{background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:14px;padding:14px;text-align:center;font-weight:800;margin:16px 0}
+
+.items{background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.item{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:.9rem}
+.item .q{color:var(--muted);font-size:.8rem}
+.total{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:1.1rem;padding-top:12px;border-top:1px solid var(--line)}
+.meta{font-size:.82rem;color:var(--muted);margin-top:12px;display:flex;flex-direction:column;gap:4px}
+
+.empty{text-align:center;padding:56px 20px}
+.empty .icon{font-size:46px;margin-bottom:12px}
+.empty h2{font-size:1.1rem;margin-bottom:6px}
+.empty p{color:var(--muted);font-size:.9rem;margin-bottom:16px}
+.input-code{width:100%;padding:14px;border:1.5px solid var(--line);border-radius:14px;text-align:center;font-size:1.15rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase}
+.input-code:focus{outline:none;border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:14px;font-weight:800;font-size:.95rem;padding:14px 20px;transition:.18s;width:100%}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.spinner{width:40px;height:40px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.foot{margin-top:18px;text-align:center}
+.foot a{color:var(--accent);text-decoration:none;font-weight:700;font-size:.85rem}
+</style>
+</head>
+<body>
+<div x-data="pedido" x-init="init()" x-cloak>
+  <div class="top">
+    <div class="logo">🍔</div>
+    <h1 x-text="cfg.nombre"></h1>
+    <div class="sub">Seguí el estado de tu pedido en tiempo real</div>
+  </div>
+
+  <div class="wrap">
+    <!-- Cargando -->
+    <div class="card empty" x-show="cargando">
+      <div class="spinner"></div>
+      <p style="color:var(--muted)">Buscando tu pedido…</p>
+    </div>
+
+    <!-- No encontrado / sin código -->
+    <div class="card empty" x-show="!cargando && !pedido">
+      <div class="icon">🔍</div>
+      <h2>No encontramos tu pedido</h2>
+      <p>Ingresá el código que te llegó por WhatsApp.</p>
+      <input class="input-code" x-model="codigoInput" placeholder="X7K9" maxlength="6" @keydown.enter="buscar()">
+      <button class="btn btn-primary" style="margin-top:12px" @click="buscar()">Consultar</button>
+      <div class="foot"><a href="index.html">← Volver al menú</a></div>
+    </div>
+
+    <!-- Pedido encontrado -->
+    <div x-show="pedido">
+      <div class="card">
+        <div class="row">
+          <span class="num" x-text="pedido.numeroPedido || 'PEDIDO'"></span>
+          <span class="badge" :style="'background:' + estadoColor[pedido.estado]" x-text="estadoLabel[pedido.estado]"></span>
+        </div>
+
+        <div class="cancel" x-show="pedido.estado === 'cancelado'">❌ Este pedido fue cancelado</div>
+
+        <div class="stepper" x-show="pedido.estado !== 'cancelado'">
+          <template x-for="(p, i) in pasos" :key="p">
+            <div class="step" :class="pasoClase(i)">
+              <div class="dot" x-text="pasoDot(i)"></div>
+              <div class="lbl" x-text="pasoLabel[p]"></div>
+            </div>
+          </template>
+        </div>
+
+        <div class="items">
+          <template x-for="it in pedido.items" :key="it.productoId">
+            <div class="item">
+              <span><span class="q" x-text="it.cantidad + '× '"></span><span x-text="it.nombre"></span></span>
+              <span x-text="fmtPrecio(it.precio * it.cantidad)"></span>
+            </div>
+          </template>
+        </div>
+        <div class="total">
+          <span>TOTAL</span>
+          <span x-text="fmtPrecio(pedido.total)"></span>
+        </div>
+
+        <div class="meta">
+          <span>💳 Pago: <span x-text="pedido.cliente.metodoPago"></span></span>
+          <span x-show="pedido.cliente.notas">📝 <span x-text="pedido.cliente.notas"></span></span>
+          <span>🕓 Recibido: <span x-text="fmtHora(pedido.fechaCreacion)"></span></span>
+        </div>
+      </div>
+
+      <div class="foot"><a href="index.html">← Volver al menú</a></div>
+    </div>
+  </div>
+</div>
+
+<script src="admin-config.js"></script>
+<script>
+// Instancia de Firebase FUERA del estado reactivo de Alpine.
+let firebaseDB = null;
+
+function initFirebase(){
+  if (firebase.apps.length === 0) firebase.initializeApp(window.ADMIN_CONFIG.firebase);
+  firebaseDB = firebase.database();
+}
+
+function pedido(){
+  return {
+    cfg: window.ADMIN_CONFIG,
+    codigo: '', codigoInput: '',
+    pedido: null, cargando: true,
+    estadoLabel: { recibido:'Recibido', preparando:'Preparando', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' },
+    estadoColor: { recibido:'#2563EB', preparando:'#D97706', en_camino:'#7C3AED', entregado:'#16A34A', cancelado:'#DC2626' },
+    pasos: ['recibido','preparando','en_camino','entregado'],
+    pasoLabel: { recibido:'Recibido', preparando:'Preparando', en_camino:'En camino', entregado:'Entregado' },
+
+    init(){
+      initFirebase();
+      this.codigo = (new URLSearchParams(location.search).get('codigo') || '').trim().toUpperCase();
+      if (this.codigo) this.escuchar();
+      else this.cargando = false;
+    },
+
+    escuchar(){
+      this.cargando = true;
+      if (this._ref) { this._ref.off(); this._ref = null; }
+      this._ref = firebaseDB.ref(this.cfg.ruta + '/pedidos')
+        .orderByChild('codigoConsulta').equalTo(this.codigo);
+      this._ref.on('value', snap => {
+        const data = snap.val();
+        if (data) {
+          const id = Object.keys(data)[0];
+          this.pedido = { id, ...data[id] };
+        } else {
+          this.pedido = null;
+        }
+        this.cargando = false;
+      }, err => { console.error(err); this.pedido = null; this.cargando = false; });
+    },
+
+    buscar(){
+      const c = this.codigoInput.trim().toUpperCase();
+      if (!c) return;
+      this.codigo = c;
+      this.escuchar();
+    },
+
+    pasoIdx(){ return this.pedido ? this.pasos.indexOf(this.pedido.estado) : -1; },
+    pasoClase(i){
+      const a = this.pasoIdx();
+      if (a < 0) return '';
+      if (i < a) return 'done';
+      if (i === a) return 'active';
+      return '';
+    },
+    pasoDot(i){
+      const a = this.pasoIdx();
+      return (a >= 0 && i < a) ? '✓' : (i + 1);
+    },
+
+    fmtPrecio(n){ return '$' + Number(n || 0).toLocaleString('es-CO'); },
+    fmtHora(ts){
+      if (!ts) return '—';
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleString('es-CO', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }
+  };
+}
+</script>
+</body>
+</html>

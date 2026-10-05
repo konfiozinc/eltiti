@@ -10,7 +10,7 @@
         ".write": "auth != null"
       },
       "reseñas": { ".write": true },
-      "pedidos": { ".write": true },
+      "pedidos": { ".write": true, ".indexOn": ["codigoConsulta"] },
       ".write": "auth != null"
     },
     "colsabor": {
@@ -22,7 +22,7 @@
         ".write": "auth != null"
       },
       "reseñas": { ".write": true },
-      "pedidos": { ".write": true },
+      "pedidos": { ".write": true, ".indexOn": ["codigoConsulta"] },
       ".write": "auth != null"
     },
     "menu_backup": {
