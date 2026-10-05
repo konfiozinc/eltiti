@@ -665,7 +665,7 @@
 
                     // 4) Abrir WhatsApp con el mensaje de siempre + datos del cliente
                     let msg = '🍔 *PEDIDO - EL TITI Comidas Rápidas*\n';
-                    msg += '🪪 ' + c.nombre + ' · 📞 ' + c.telefono + '\n';
+                    msg += '👤 ' + c.nombre + ' · ' + c.telefono + '\n';
                     msg += '━━━━━━━━━━━━━━━━━━━━\n';
                     this.carrito.forEach(i => {
                         msg += i.emoji + ' *' + i.nombre + '*\n   Cantidad: ' + i.cantidad + '\n   Precio: $' + (i.precio * i.cantidad).toLocaleString('es-CO') + '\n\n';
