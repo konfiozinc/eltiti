@@ -107,6 +107,15 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:#111827;color:#fff;padding:11px 18px;border-radius:12px;font-size:.85rem;font-weight:600;z-index:80;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.3);pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .loading{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+
+/* ===== ESTADO DE LA TIENDA ===== */
+.tienda-card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px;margin-bottom:16px}
+.tienda-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.tienda-title{font-weight:800;font-size:.95rem}
+.tienda-pill{font-size:.68rem;font-weight:800;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.tienda-pill.on{background:#DCFCE7;color:#15803D}
+.tienda-pill.off{background:#FEE2E2;color:#B91C1C}
+.tienda-hint{font-size:.72rem;color:var(--muted);margin-top:8px}
 </style>
 </head>
 <body x-data="admin" x-cloak>
@@ -144,6 +153,28 @@ input,select,textarea{font-family:inherit;font-size:15px}
     <button @click="logout">Salir</button>
   </header>
   <div class="wrap">
+    <!-- ===== ESTADO DE LA TIENDA (interruptor ON/OFF) ===== -->
+    <div class="tienda-card">
+      <div class="tienda-head">
+        <span class="tienda-title">🏪 Estado de la tienda</span>
+        <span class="tienda-pill" :class="tiendaAbierta ? 'on' : 'off'"
+          x-text="tiendaAbierta ? 'RECIBIENDO PEDIDOS' : 'CERRADA'"></span>
+      </div>
+      <label class="toggle" style="margin-bottom:10px">
+        <span class="lbl">Recibiendo pedidos</span>
+        <span class="switch">
+          <input type="checkbox" x-model="tiendaAbierta" @change="guardarTienda()">
+          <span class="slider"></span>
+        </span>
+      </label>
+      <div class="field" style="margin-bottom:0">
+        <label>Mensaje al cliente cuando está cerrada</label>
+        <textarea x-model="mensajeCierre" rows="2" @change="guardarTienda()"
+          placeholder="Nuestra cocina está al límite. Vuelve en unos minutos."></textarea>
+      </div>
+      <div class="tienda-hint">Al guardar, el menú público se bloquea o reactiva al instante (sin recargar).</div>
+    </div>
+
     <div class="toolbar">
       <div class="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -253,6 +284,8 @@ function admin(){
     cargando: true,
     modal: false, editandoId: null, guardando: false, subiendo: false,
     toast: '',
+    tiendaAbierta: true,
+    mensajeCierre: '',
     form: { nombre:'', categoria:'', precio:0, descripcion:'', tiempo:0, imagen:'', destacado:false, disponible:true },
 
     init(){
@@ -260,8 +293,28 @@ function admin(){
       firebaseAuth.onAuthStateChanged(u => {
         this.usuario = u;
         this.authReady = true;
-        if (u) this.escuchar();
+        if (u) { this.escuchar(); this.escucharTienda(); }
       });
+    },
+
+    escucharTienda(){
+      firebaseDB.ref(this.cfg.ruta + '/meta/tiendaAbierta').on('value', snap => {
+        const v = snap.val();
+        this.tiendaAbierta = (v === null || v === undefined) ? true : !!v;
+      });
+      firebaseDB.ref(this.cfg.ruta + '/meta/mensajeCierre').on('value', snap => {
+        const m = snap.val();
+        if (typeof m === 'string' && m.trim()) this.mensajeCierre = m.trim();
+      });
+    },
+
+    guardarTienda(){
+      firebaseDB.ref(this.cfg.ruta + '/meta').update({
+        tiendaAbierta: !!this.tiendaAbierta,
+        mensajeCierre: this.mensajeCierre
+      })
+        .then(() => this.toastMsg(this.tiendaAbierta ? '✓ Tienda ABIERTA — recibiendo pedidos' : '🔒 Tienda CERRADA — pedidos pausados'))
+        .catch(e => this.toastMsg('Error: ' + e.message));
     },
 
     escuchar(){

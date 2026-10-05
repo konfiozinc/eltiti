@@ -328,6 +328,10 @@
                 enviandoPedido: false,
                 metodosPago: ['Efectivo', 'Nequi', 'Daviplata', 'Transferencia'],
 
+                // ── Interruptor de tienda (ON/OFF en vivo desde el panel) ──
+                tiendaAbierta: true,
+                mensajeCierre: 'Nuestra cocina está al límite. Vuelve en unos minutos.',
+
                 // ═══════════════ GETTERS ═══════════════
                 get syncStatus() {
                     const store = Alpine.store('sync');
@@ -371,6 +375,7 @@
                 },
                 get totalItems() { return this.carrito.reduce((s, i) => s + i.cantidad, 0); },
                 get totalPrecio() { return this.carrito.reduce((s, i) => s + i.precio * i.cantidad, 0); },
+                get tiendaCerrada() { return this.tiendaAbierta === false; },
 
                 // ═══════════════ INICIALIZACIÓN ═══════════════
                 // 0. Contenido base desde Pages CMS (data/*.json) — Firebase lo sobrescribe en vivo
@@ -468,6 +473,16 @@
                     window.addEventListener('beforeinstallprompt', (e) => {
                         e.preventDefault();
                         this.deferredPrompt = e;
+                    });
+
+                    // 9. Interruptor de tienda ON/OFF (en vivo, sin recargar)
+                    refMeta.child('tiendaAbierta').on('value', (snap) => {
+                        const v = snap.val();
+                        this.tiendaAbierta = (v === null || v === undefined) ? true : !!v;
+                    });
+                    refMeta.child('mensajeCierre').on('value', (snap) => {
+                        const m = snap.val();
+                        if (typeof m === 'string' && m.trim()) this.mensajeCierre = m.trim();
                     });
                 },
 
@@ -599,6 +614,7 @@
 
                 // ═══════════════ CARRITO ═══════════════
                 agregarAlCarrito(p) {
+                    if (this.tiendaCerrada) { this.mostrarToast('🔒 ' + this.mensajeCierre); return; }
                     const idx = this.carrito.findIndex(i => i.id === p.id);
                     if (idx >= 0) { this.carrito[idx].cantidad++; }
                     else { this.carrito.push({ id: p.id, nombre: p.nombre, precio: p.precio, emoji: p.emoji || EMOJIS_CATEGORIA[p.categoria] || '🍔', cantidad: 1 }); }
@@ -613,6 +629,7 @@
                 vaciarCarrito() { if (confirm('¿Vaciar el carrito?')) this.carrito = []; },
                 enviarPedido() {
                     if (!this.carrito.length) return;
+                    if (this.tiendaCerrada) { this.mostrarToast('🔒 ' + this.mensajeCierre); return; }
                     // Paso 1: pedir los datos del cliente antes de abrir WhatsApp
                     this.carritoOpen = false;
                     this.checkoutOpen = true;
@@ -620,6 +637,7 @@
 
                 async confirmarPedido() {
                     if (!this.carrito.length) return;
+                    if (this.tiendaCerrada) { this.mostrarToast('🔒 ' + this.mensajeCierre); return; }
                     const c = this.checkout;
                     if (!c.nombre.trim() || !c.telefono.trim() || !c.direccion.trim()) {
                         this.mostrarToast('⚠️ Completa nombre, teléfono y dirección');
