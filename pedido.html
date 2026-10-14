@@ -123,8 +123,7 @@ input{font-family:inherit}
         </div>
 
         <div class="meta">
-          <span>💳 Pago: <span x-text="pedido.cliente.metodoPago"></span></span>
-          <span x-show="pedido.cliente.notas">📝 <span x-text="pedido.cliente.notas"></span></span>
+          <span x-show="pedido.numeroPedido">🧾 Pedido <span x-text="pedido.numeroPedido"></span></span>
           <span>🕓 Recibido: <span x-text="fmtHora(pedido.fechaCreacion)"></span></span>
         </div>
       </div>

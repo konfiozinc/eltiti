@@ -57,6 +57,10 @@
     const refMeta          = fbDB.ref('menu/meta');
     const refPedidos       = fbDB.ref('menu/pedidos');
     const refContador      = fbDB.ref('menu/meta/contadorPedidos');
+    // Los datos del cliente (nombre, teléfono, dirección, pago, notas) NO van en
+    // menu/pedidos porque ese nodo es de LECTURA PÚBLICA (rastreo por código).
+    // Viven aquí, que solo puede leer el equipo autenticado.
+    const refPedidosPrivados = fbDB.ref('menu/pedidos_privados');
 
     // ═══════════════════════════════════════════════════════════════
     //  ESTADO GLOBAL DE SINCRONIZACIÓN (Alpine Store)
@@ -658,25 +662,35 @@
                     // 2) Código corto de consulta pública
                     const codigoConsulta = Math.random().toString(36).slice(2, 6).toUpperCase();
 
-                    // 3) Guardar el pedido en RTDB (menu/pedidos)
-                    const pedido = {
+                    // 3) Guardar el pedido en RTDB, dividido en dos nodos:
+                    //    menu/pedidos          -> LECTURA PÚBLICA (rastreo por código). Cero datos del cliente.
+                    //    menu/pedidos_privados -> SOLO equipo autenticado. Aquí vive el objeto `cliente`.
+                    const pedidoPublico = {
                         numeroPedido,
                         codigoConsulta,
-                        cliente: {
-                            nombre: c.nombre.trim(),
-                            telefono: c.telefono.trim(),
-                            direccion: c.direccion.trim(),
-                            metodoPago: c.metodoPago,
-                            notas: c.notas.trim()
-                        },
                         items: this.carrito.map(i => ({ productoId: i.id, nombre: i.nombre, precio: i.precio, cantidad: i.cantidad })),
                         total: this.totalPrecio,
                         estado: 'recibido',
                         fechaCreacion: firebase.database.ServerValue.TIMESTAMP,
                         fechaActualizacion: firebase.database.ServerValue.TIMESTAMP
                     };
+                    const clientePrivado = {
+                        nombre: c.nombre.trim(),
+                        telefono: c.telefono.trim(),
+                        direccion: c.direccion.trim(),
+                        metodoPago: c.metodoPago,
+                        notas: c.notas.trim()
+                    };
                     try {
-                        await refPedidos.push(pedido);
+                        // Se genera la clave primero para que ambos nodos queden enlazados.
+                        const nuevaRef = refPedidos.push();
+                        const clave = nuevaRef.key;
+                        await nuevaRef.set(pedidoPublico);
+                        await refPedidosPrivados.child(clave).set({
+                            numeroPedido,
+                            cliente: clientePrivado,
+                            fechaCreacion: firebase.database.ServerValue.TIMESTAMP
+                        });
                     } catch (e) {
                         console.error('[EL TITI] No se pudo guardar el pedido:', e);
                         this.mostrarToast('⚠️ No se guardó en el panel, pero continuamos por WhatsApp');

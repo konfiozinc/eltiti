@@ -329,26 +329,49 @@ function admin(){
     },
 
     escuchar(){
+      // Los pedidos viven en dos nodos: el público (rastreo por código, sin datos
+      // del cliente) y el privado (nombre, teléfono, dirección, pago, notas).
+      // Se escuchan ambos y se fusionan por la misma clave.
+      this._publicos = {};
+      this._privados = {};
+
+      firebaseDB.ref(this.cfg.ruta + '/pedidos_privados').on('value', snap => {
+        this._privados = snap.val() || {};
+        this._fusionar();
+      }, err => console.warn('[panel] No se pudieron leer los datos del cliente:', err.message));
+
       firebaseDB.ref(this.cfg.ruta + '/pedidos').on('value', snap => {
-        const data = snap.val() || {};
-        const lista = Object.keys(data).filter(k => data[k]).map(k => ({ id: k, ...data[k] }));
-        lista.sort((a, b) => (b.fechaCreacion || 0) - (a.fechaCreacion || 0));
-
-        // Detección de pedidos nuevos. La PRIMERA carga no alerta (evita
-        // disparar el sonido por los pedidos que ya existían al abrir el panel).
-        if (this.idsVistos === null) {
-          this.idsVistos = lista.map(p => p.id);
-        } else {
-          const recientes = lista.filter(p => this.idsVistos.indexOf(p.id) === -1);
-          if (recientes.length) {
-            recientes.forEach(p => { this.idsVistos.push(p.id); this.marcarNuevo(p.id); });
-            this.alertaNuevoPedido(recientes[0]);
-          }
-        }
-
-        this.pedidos = JSON.parse(JSON.stringify(lista));
-        this.cargando = false;
+        this._publicos = snap.val() || {};
+        this._fusionar();
       }, err => { this.cargando = false; this.toastMsg('Error al cargar: ' + err.message); });
+    },
+
+    _fusionar(){
+      const data = this._publicos || {};
+      const priv = this._privados || {};
+      const lista = Object.keys(data).filter(k => data[k]).map(k => ({
+        id: k,
+        ...data[k],
+        // `cliente` viene del nodo privado. El respaldo en data[k] cubre los
+        // pedidos antiguos que todavía no se han migrado.
+        cliente: (priv[k] && priv[k].cliente) || data[k].cliente || {}
+      }));
+      lista.sort((a, b) => (b.fechaCreacion || 0) - (a.fechaCreacion || 0));
+
+      // Detección de pedidos nuevos. La PRIMERA carga no alerta (evita
+      // disparar el sonido por los pedidos que ya existían al abrir el panel).
+      if (this.idsVistos === null) {
+        this.idsVistos = lista.map(p => p.id);
+      } else {
+        const recientes = lista.filter(p => this.idsVistos.indexOf(p.id) === -1);
+        if (recientes.length) {
+          recientes.forEach(p => { this.idsVistos.push(p.id); this.marcarNuevo(p.id); });
+          this.alertaNuevoPedido(recientes[0]);
+        }
+      }
+
+      this.pedidos = JSON.parse(JSON.stringify(lista));
+      this.cargando = false;
     },
 
     get contadores(){

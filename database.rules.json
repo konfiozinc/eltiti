@@ -1,32 +1,55 @@
 {
   "rules": {
-    ".read": true,
     "menu": {
-      "productos": { ".write": "auth != null" },
-      "promo": { ".write": "auth != null" },
-      "horario": { ".write": "auth != null" },
+      ".write": "auth != null",
+      "productos": { ".read": true },
+      "promo": { ".read": true },
+      "horario": { ".read": true },
       "meta": {
-        "contadorPedidos": { ".write": true },
-        ".write": "auth != null"
+        ".read": true,
+        "contadorPedidos": { ".write": true }
       },
-      "reseñas": { ".write": true },
-      "pedidos": { ".write": true, ".indexOn": ["codigoConsulta"] },
-      ".write": "auth != null"
+      "reseñas": { ".read": true, ".write": true },
+      "pedidos": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": ["codigoConsulta"]
+      },
+      "pedidos_privados": {
+        ".read": "auth != null",
+        ".write": true
+      }
     },
     "colsabor": {
-      "productos": { ".write": "auth != null" },
-      "promo": { ".write": "auth != null" },
-      "horario": { ".write": "auth != null" },
+      ".write": "auth != null",
+      "productos": { ".read": true },
+      "promo": { ".read": true },
+      "horario": { ".read": true },
       "meta": {
-        "contadorPedidos": { ".write": true },
-        ".write": "auth != null"
+        ".read": true,
+        "contadorPedidos": { ".write": true }
       },
-      "reseñas": { ".write": true },
-      "pedidos": { ".write": true, ".indexOn": ["codigoConsulta"] },
-      ".write": "auth != null"
+      "reseñas": { ".read": false, ".write": false },
+      "pedidos": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": ["codigoConsulta"]
+      },
+      "pedidos_privados": {
+        ".read": "auth != null",
+        ".write": true
+      }
     },
-    "menu_backup": {
-      ".write": "auth != null"
+    "menu_backup": { ".read": "auth != null", ".write": true },
+    "dta-chanclas": {
+      ".write": "auth != null",
+      "productos": { ".read": true },
+      "meta": { ".read": true }
+    },
+    "nbc-company": {
+      ".write": "auth != null",
+      "productos": { ".read": true },
+      "meta": { ".read": true }
     }
   }
 }
