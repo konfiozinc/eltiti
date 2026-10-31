@@ -1,5 +1,5 @@
 ﻿// Escenarios ANÓNIMOS (visitante) contra el emulador RTDB con las reglas propuestas.
-const BASE = "http://127.0.0.1:9000";
+const BASE = "http://127.0.0.1:9000"; const NS = "demo-sec-006-default-rtdb";
 const P = "demo-sec-006";
 let ok = 0, fail = 0;
 const chk = async (nombre, esperado, fn) => {
@@ -9,7 +9,7 @@ const chk = async (nombre, esperado, fn) => {
   else { fail++; console.log("  FALLA " + nombre + " -> " + v + " (esperado " + esperado + ")"); }
 };
 const req = async (m, ruta, cuerpo) => {
-  const u = `${BASE}/${ruta}.json`;
+  const u = `${BASE}/${ruta}.json?ns=${NS}`;
   const r = await fetch(u, { method: m, headers: { "Content-Type": "application/json" }, body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo) });
   return r.status;
 };
@@ -28,6 +28,10 @@ const req = async (m, ruta, cuerpo) => {
     await fetch(`${BASE}/${ruta}.json&auth=owner`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(valor) });
   }
   console.log("=== matriz anónima (visitante sin sesión) ===");
+  // DIAGNOSTICO: si un PUT anónimo a menu_backup devuelve 200, las reglas NO se cargaron.
+  const sonda = await req("PUT", "menu_backup/productos/sonda", { x: 1 });
+  console.log("DIAGNOSTICO reglas cargadas: " + (sonda === 401 ? "SÍ (401 en escritura prohibida)" : "NO (" + sonda + ")"));
+  if (sonda !== 401) { console.log("  -> el emulador sigue con reglas abiertas; no ejecuto la matriz"); process.exit(3); }
   await chk("lee productos del menú", 200, () => req("GET", "menu/productos"));
   await chk("lee productos de colsabor", 200, () => req("GET", "colsabor/productos"));
   await chk("lee pedidos para rastreo", 200, () => req("GET", "menu/pedidos"));
@@ -46,4 +50,6 @@ const req = async (m, ruta, cuerpo) => {
   console.log("\n  comprobaciones: " + (ok + fail) + " · PASA " + ok + " · FALLA " + fail);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error("ERROR: " + e.message); process.exit(2); });
+
+
 
