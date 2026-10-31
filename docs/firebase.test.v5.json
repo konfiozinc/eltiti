@@ -1,6 +1,6 @@
-{
+﻿{
   "database": {
-    "rules": "database.rules.v5.candidata.json"
+    "rules": "../database.rules.v5.candidata.json"
   },
   "emulators": {
     "database": {
@@ -14,3 +14,4 @@
     }
   }
 }
+
