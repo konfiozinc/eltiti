@@ -203,7 +203,8 @@ const NEGOCIO = {
 
 const $ = (s) => document.querySelector(s);
 const plato = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
-let productos = [], config = {}, carrito = JSON.parse(localStorage.getItem("ks-carrito") || "{}");
+const CLAVE_CARRITO = "ks-carrito-" + NEGOCIO.ns; /* un carrito por negocio: ambos menús comparten dominio */
+let productos = [], config = {}, carrito = (function () { try { const v = localStorage.getItem(CLAVE_CARRITO) || localStorage.getItem("ks-carrito"); return JSON.parse(v || "{}"); } catch (e) { return {}; } })();
 
 function esc(v) { return String(v == null ? "" : v).replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c])); }
 function urlImagen(p) { const v = String((p && p.imagen) || ""); return /^https?:\/\//i.test(v) ? v : NEGOCIO.carpeta + v.replace(/^\.?\//, ""); }
@@ -335,7 +336,7 @@ $("#mCerrar").addEventListener("click", () => $("#modal").classList.remove("on")
 $("#modal").addEventListener("click", (e) => { if (e.target.id === "modal") $("#modal").classList.remove("on"); });
 
 /* ---- carrito ---- */
-function guardar() { localStorage.setItem("ks-carrito", JSON.stringify(carrito)); }
+function guardar() { localStorage.setItem(CLAVE_CARRITO, JSON.stringify(carrito)); }
 function sumar(id) { const p = productos.find((x) => String(x.id) === String(id)); if (!p || p.agotado) return; carrito[id] = (carrito[id] || 0) + 1; guardar(); pintarCarrito(); }
 function quitarUno(id) { carrito[id] = (carrito[id] || 0) - 1; if (carrito[id] <= 0) delete carrito[id]; guardar(); pintarCarrito(); }
 function borrar(id) { delete carrito[id]; guardar(); pintarCarrito(); }
