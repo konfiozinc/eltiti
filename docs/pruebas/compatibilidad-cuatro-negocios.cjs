@@ -1,0 +1,26 @@
+﻿const FS="http://127.0.0.1:9000",AUTH="http://127.0.0.1:9099",NS="demo-sec-v5-default-rtdb",K="fake-key";
+const rq=(m,p,b,t,o)=>fetch(`${FS}/${p}.json?ns=${NS}${o?"&access_token=owner":t?"&auth="+encodeURIComponent(t):""}`,{method:m,headers:{"content-type":"application/json"},body:b===undefined?undefined:JSON.stringify(b)}).then(r=>r.status);
+const alta=async e=>{await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=${K}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({email:e,password:"pass12345",returnSecureToken:true})});return(await(await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${K}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({email:e,password:"pass12345",returnSecureToken:true})})).json());};
+(async()=>{
+  const t=await alta("rel-titi@f.test"); await rq("PUT","_admin/"+t.localId,{negocio:"titi",activo:true},null,true);
+  await rq("PUT","dta-chanclas/productos/d1",{nombre:"ficticio dta"},null,true);
+  await rq("PUT","nbc-company/productos/n1",{nombre:"ficticio nbc"},null,true);
+  await rq("PUT","menu_backup/productos/b1",{nombre:"ficticio backup"},null,true);
+  const filas=[];
+  const chk=(n,esp,obs)=>{const ok=(esp==="permitir")?(obs===200):([401,403].includes(obs));filas.push([n,obs,esp,ok]);};
+  chk("DTA · lectura pública de productos", "permitir", await rq("GET","dta-chanclas/productos"));
+  chk("DTA · escritura anónima", "denegar", await rq("PUT","dta-chanclas/productos/x",{n:1}));
+  chk("NBC · lectura pública de productos", "permitir", await rq("GET","nbc-company/productos"));
+  chk("NBC · escritura anónima", "denegar", await rq("PUT","nbc-company/productos/x",{n:1}));
+  chk("NBC · escritura con admin de El Titi", "denegar", await rq("PUT","nbc-company/productos/x",{n:1},t.idToken));
+  chk("menu_backup · lectura anónima", "denegar", await rq("GET","menu_backup"));
+  chk("menu_backup · lectura admin activo", "permitir", await rq("GET","menu_backup",undefined,t.idToken));
+  chk("menu_backup · escritura anónima", "denegar", await rq("PUT","menu_backup/productos/x",{n:1}));
+  chk("El Titi · productos públicos", "permitir", await rq("GET","menu/productos"));
+  chk("Col Sabor · productos públicos", "permitir", await rq("GET","colsabor/productos"));
+  chk("Col Sabor · escritura con admin de El Titi", "denegar", await rq("PUT","colsabor/productos/x",{n:1},t.idToken));
+  console.log("COMPATIBILIDAD v5 CON LOS CUATRO NEGOCIOS");
+  filas.forEach(([n,o,e,ok])=>console.log((ok?"  PASS  ":"  FALLA ")+n.padEnd(44)+"-> "+o+" ("+e+")"));
+  const fail=filas.filter(f=>!f[3]).length;
+  console.log("\nRESULTADO: "+(filas.length-fail)+"/"+filas.length+" · fallos: "+fail);
+})().catch(e=>{console.error("ERROR: "+e.message);process.exit(2);});
