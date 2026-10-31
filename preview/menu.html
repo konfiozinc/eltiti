@@ -141,7 +141,8 @@ function pintar() {
 
 function tarjeta(p) {
   const agotado = p.agotado === true;
-  const img = NEGOCIO.carpeta + "assets/productos/" + p.imagen;
+  /* el JSON ya trae la ruta completa (assets/productos/…): se usa tal cual */
+  const img = NEGOCIO.carpeta + String(p.imagen || "").replace(/^\.?\//, "");
   return '<article class="p' + (agotado ? " agotado" : "") + '">' +
     '<img src="' + img + '" alt="' + esc(p.nombre) + '" loading="lazy" onerror="this.src=\'' + NEGOCIO.carpeta + 'assets/logo/no-image.png\'">' +
     '<div class="cuerpo"><h3>' + esc(p.nombre) + (agotado ? ' <span class="sello">Agotado</span>' : "") + "</h3>" +
@@ -153,7 +154,7 @@ function tarjeta(p) {
 function abrir(id) {
   const p = productos.find((x) => String(x.id) === String(id));
   if (!p) return;
-  $("#mImg").src = NEGOCIO.carpeta + "assets/productos/" + p.imagen;
+  $("#mImg").src = NEGOCIO.carpeta + String(p.imagen || "").replace(/^\.?\//, "");
   $("#mTitulo").textContent = p.nombre;
   $("#mDesc").textContent = (p.etiquetas || []).join(" · ") || (p.tiempo ? "Listo en " + p.tiempo : "");
   $("#mPrecio").textContent = plato.format(p.precio || 0) + (p.agotado ? " · Agotado" : "");
@@ -204,4 +205,5 @@ cargar();
 </script>
 </body>
 </html>
+
 
