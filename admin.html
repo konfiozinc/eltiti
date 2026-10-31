@@ -385,13 +385,23 @@ function admin(){
 
     guardar(){
       if (!this.form.nombre.trim()) { this.toastMsg('El nombre es obligatorio'); return; }
+      const precio = Number(this.form.precio);
+      const tiempo = Number(this.form.tiempo);
+      if (!Number.isSafeInteger(precio) || precio <= 0) {
+        this.toastMsg('Ingresa un precio válido, entero y mayor que cero.');
+        return;
+      }
+      if (!Number.isSafeInteger(tiempo) || tiempo < 0) {
+        this.toastMsg('El tiempo debe ser un número entero no negativo.');
+        return;
+      }
       this.guardando = true;
       const datos = {
         nombre: this.form.nombre.trim(),
         categoria: this.form.categoria,
-        precio: Number(this.form.precio) || 0,
+        precio,
         descripcion: this.form.descripcion.trim(),
-        tiempo: Number(this.form.tiempo) || 0,
+        tiempo,
         imagen: this.form.imagen,
         destacado: !!this.form.destacado,
         agotado: !this.form.disponible,
