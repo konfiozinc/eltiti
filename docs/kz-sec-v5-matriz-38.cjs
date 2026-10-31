@@ -1,0 +1,60 @@
+const base='http://127.0.0.1:9000',ns='demo-sec-v5-default-rtdb',authBase='http://127.0.0.1:9099';
+const url=(path,token,owner=false)=>base+'/'+path+'.json?ns='+ns+(owner?'&access_token=owner':token?'&auth='+encodeURIComponent(token):'');
+async function db(method,path,body,token,owner=false){const res=await fetch(url(path,token,owner),{method,headers:{'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});return {status:res.status,text:await res.text()};}
+async function signup(name){const res=await fetch(authBase+'/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-key',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:name+'@example.test',password:'pass12345',returnSecureToken:true})});const d=await res.json();if(!d.idToken)throw Error('Auth emu no entrego token '+JSON.stringify(d));return d;}
+const results=[];const check=(name,actual,want)=>{results.push({name,status:actual.status,expected:want,pass:actual.status===want});};
+(async()=>{const titi=await signup('titi'+Date.now()),colsabor=await signup('col'+Date.now()),inactive=await signup('inactive'+Date.now());
+for(const [u,neg,activo] of [[titi,'titi',true],[colsabor,'colsabor',true],[inactive,'titi',false]]){const a=await db('PUT','_admin/'+u.localId,{negocio:neg,activo},null,true);if(a.status!==200)throw Error('seed role '+a.text);}
+const id='PED-CERT-'+Date.now(),code='C'+Date.now().toString(36).toUpperCase();
+let a=await db('PUT','menu/pedidos/'+id,{codigoConsulta:code,estado:'COTIZACION_PENDIENTE',total:0,fechaCreacion:123},null,true);if(a.status!==200)throw Error('seed order');
+a=await db('PUT','menu/pedidos_publico/'+code,{estado:'COTIZACION_PENDIENTE',fecha:'2026-10-31',total:0},null,true);if(a.status!==200)throw Error('seed public');
+check('ANON productos',await db('GET','menu/productos'),200);
+check('ANON pedidos enumeracion',await db('GET','menu/pedidos'),401);
+check('ANON pedido individual',await db('GET','menu/pedidos/'+id),401);
+check('ANON tracking individual',await db('GET','menu/pedidos_publico/'+code),200);
+check('ANON tracking global',await db('GET','menu/pedidos_publico'),401);
+check('ANON meta escritura',await db('PUT','menu/meta/tiendaAbierta',false),401);
+check('TITI meta tienda',await db('PUT','menu/meta/tiendaAbierta',true,titi.idToken),200);
+check('TITI meta mensaje',await db('PUT','menu/meta/mensajeCierre','Vuelvo pronto',titi.idToken),200);
+check('COL meta de TITI',await db('PUT','menu/meta/tiendaAbierta',false,colsabor.idToken),401);
+check('INACTIVO meta TITI',await db('PUT','menu/meta/tiendaAbierta',false,inactive.idToken),401);
+check('TITI estado pedido',await db('PUT','menu/pedidos/'+id+'/estado','CONFIRMADO',titi.idToken),200);
+check('TITI fechaActualizacion',await db('PUT','menu/pedidos/'+id+'/fechaActualizacion',123456,titi.idToken),200);
+check('TITI total confirmado',await db('PUT','menu/pedidos/'+id+'/total',27000,titi.idToken),200);
+check('COL pedido TITI',await db('PUT','menu/pedidos/'+id+'/estado','CANCELADO',colsabor.idToken),401);
+check('TITI estado invalido',await db('PUT','menu/pedidos/'+id+'/estado','ESTADO_FALSO',titi.idToken),401);
+check('TITI tracking estado',await db('PUT','menu/pedidos_publico/'+code+'/estado','CONFIRMADO',titi.idToken),200);
+check('TITI tracking total',await db('PUT','menu/pedidos_publico/'+code+'/total',27000,titi.idToken),200);
+check('ANON tracking alteracion',await db('PUT','menu/pedidos_publico/'+code+'/total',1),401);
+check('TITI estado legado',await db('PUT','menu/pedidos/'+id+'/estado','preparando',titi.idToken),200);
+check('ANON borrar pedido',await db('DELETE','menu/pedidos/'+id),401);
+const paths={};paths['menu/pedidos/'+id+'/estado']='ENTREGADO';paths['menu/pedidos/'+id+'/fechaActualizacion']=98765;paths['menu/pedidos_publico/'+code+'/estado']='ENTREGADO';
+check('TITI multipath atomico',await db('PATCH','',paths,titi.idToken),200);
+const colid='COL-CERT-'+Date.now(),colcode='X'+Date.now().toString(36).toUpperCase();
+const seedCol=await db('PUT','colsabor/pedidos/'+colid,{codigoConsulta:colcode,estado:'COTIZACION_PENDIENTE',total:0},null,true);if(seedCol.status!==200)throw Error('seed Col pedido');
+check('COL productos ANON',await db('GET','colsabor/productos'),200);
+check('COL tienda propio rol',await db('PUT','colsabor/meta/tiendaAbierta',true,colsabor.idToken),200);
+check('TITI no cambia tienda COL',await db('PUT','colsabor/meta/tiendaAbierta',false,titi.idToken),401);
+check('COL cambia su estado',await db('PUT','colsabor/pedidos/'+colid+'/estado','CONFIRMADO',colsabor.idToken),200);
+check('TITI no cambia pedido COL',await db('PUT','colsabor/pedidos/'+colid+'/estado','CANCELADO',titi.idToken),401);
+check('COL no cambia pedido TITI',await db('PUT','menu/pedidos/'+id+'/estado','CANCELADO',colsabor.idToken),401);
+check('ANON no lee privados COL',await db('GET','colsabor/pedidos_privados'),401);
+check('ANON no sobrescribe pedido COL',await db('PUT','colsabor/pedidos/'+colid,{estado:'CANCELADO'}),401);
+check('TITI total negativo prohibido',await db('PUT','menu/pedidos/'+id+'/total',-1,titi.idToken),401);
+check('ANON no lee mapping',await db('GET','_admin/'+titi.localId),401);
+check('TITI lee su mapping',await db('GET','_admin/'+titi.localId,undefined,titi.idToken),200);
+check('COL no lee mapping TITI',await db('GET','_admin/'+titi.localId,undefined,colsabor.idToken),401);
+check('ANON no modifica mapping',await db('PUT','_admin/'+titi.localId+'/activo',true),401);
+const guestId='GUEST-'+Date.now(),guestCode='G'+Date.now().toString(36).toUpperCase(),guestPaths={};
+guestPaths['menu/pedidos/'+guestId]={codigoConsulta:guestCode,estado:'COTIZACION_PENDIENTE',total:0};guestPaths['menu/pedidos_privados/'+guestId]={codigoConsulta:guestCode,cliente:{nombre:'FICTICIO'}};guestPaths['menu/pedidos_publico/'+guestCode]={estado:'COTIZACION_PENDIENTE',fecha:'2026-10-31',total:0};
+check('ANON crea 3 nodos atomicos',await db('PATCH','',guestPaths),200);
+check('ANON no repite mismo UUID',await db('PATCH','',guestPaths),401);
+const prior=await db('GET','menu/pedidos/'+id+'/estado',undefined,titi.idToken),invalidAtomic={};
+invalidAtomic['menu/pedidos/'+id+'/estado']='CANCELADO';invalidAtomic['colsabor/meta/tiendaAbierta']=false;
+check('Multipath cruzado denegado',await db('PATCH','',invalidAtomic,titi.idToken),401);
+const afterAtomic=await db('GET','menu/pedidos/'+id+'/estado',undefined,titi.idToken);
+results.push({name:'Atomicidad conserva estado',status:afterAtomic.text,expected:prior.text,pass:afterAtomic.text===prior.text});
+
+const failed=results.filter(x=>!x.pass);for(const x of results)console.log((x.pass?'PASS':'FAIL')+' '+x.name+' '+x.status+' esperado '+x.expected);console.log('RESULTADO '+(results.length-failed.length)+'/'+results.length);if(failed.length)process.exitCode=1;
+})().catch(e=>{console.error('ERROR CERTIFICACION:',e);process.exitCode=2});
+

@@ -1,0 +1,182 @@
+{
+  "_origen": "Firebase RTDB · menu/productos (proyecto el-titi-menu) · lectura 2026-11-02",
+  "_nota": "Identificadores originales conservados. Sin cambios de nombre, precio, categoria ni imagen.",
+  "productos": [
+    {
+      "id": "hb-x",
+      "nombre": "Hamburguesa Doble",
+      "categoria": "Hamburguesas",
+      "precio": 18000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065195/l8kywam0md5mq3q5qr7o.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 20,
+      "destacado": true
+    },
+    {
+      "id": "hb-especial",
+      "nombre": "Hamburguesa Especial",
+      "categoria": "Hamburguesas",
+      "precio": 18000,
+      "imagen": "assets/productos/hamburguesa-especial.webp",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 0,
+      "destacado": true
+    },
+    {
+      "id": "hb-simple",
+      "nombre": "Hamburguesa Simple",
+      "categoria": "Hamburguesas",
+      "precio": 8000,
+      "imagen": "assets/productos/hamburguesa-simple.webp",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": null,
+      "destacado": true
+    },
+    {
+      "id": "hb-doble",
+      "nombre": "Hamburguesas",
+      "categoria": "Hamburguesas",
+      "precio": 10000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065051/ryriofnggdj9rmvof67m.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 20,
+      "destacado": true
+    },
+    {
+      "id": "choripapa",
+      "nombre": "Choripapa",
+      "categoria": "Salchipapas",
+      "precio": 12000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791009335/zy8rhgpt7cmlyxt1pdul.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 20,
+      "destacado": true
+    },
+    {
+      "id": "sp-doble",
+      "nombre": "Salchipapa Doble",
+      "categoria": "Salchipapas",
+      "precio": 11000,
+      "imagen": "assets/productos/salchipapa-doble.webp",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": null,
+      "destacado": true
+    },
+    {
+      "id": "sp-especial",
+      "nombre": "Salchipapa Especial",
+      "categoria": "Salchipapas",
+      "precio": 8000,
+      "imagen": "assets/productos/salchipapa-especial.webp",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": null,
+      "destacado": true
+    },
+    {
+      "id": "sp-simple",
+      "nombre": "Salchipapa Simple",
+      "categoria": "Salchipapas",
+      "precio": 6000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065649/dw7fm4mv3enmb0509bop.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 0,
+      "destacado": true
+    },
+    {
+      "id": "sp-triple",
+      "nombre": "Salchipapa Triple",
+      "categoria": "Salchipapas",
+      "precio": 14000,
+      "imagen": "assets/productos/salchipapa-triple.webp",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": null,
+      "destacado": true
+    },
+    {
+      "id": "sp-x",
+      "nombre": "Salchipapa X",
+      "categoria": "Salchipapas",
+      "precio": 17000,
+      "imagen": "assets/productos/salchipapa-x.webp",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": null,
+      "destacado": true
+    },
+    {
+      "id": "-P32oJslKTLLahoiqsfZ",
+      "nombre": "Salchipapa XXX",
+      "categoria": "Salchipapas",
+      "precio": 22000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065545/vjz3fu8j1ge5d4jkgpyw.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 20,
+      "destacado": true
+    },
+    {
+      "id": "chuzo-cerdo",
+      "nombre": "Chuzo de Cerdo",
+      "categoria": "Chuzos",
+      "precio": 17000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065752/dzh8kdctjztqsumeoynl.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 0,
+      "destacado": true
+    },
+    {
+      "id": "chuzo-pollo",
+      "nombre": "Chuzo de Pollo",
+      "categoria": "Chuzos",
+      "precio": 15000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791009454/fnjysbi2bknj0csltlbb.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 30,
+      "destacado": true
+    },
+    {
+      "id": "-P32q0rM6C9-J2FmpX-7",
+      "nombre": "Picada",
+      "categoria": "Picadas",
+      "precio": 35000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791066061/mxiku7m0fhmlazlzrwj8.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 30,
+      "destacado": true
+    },
+    {
+      "id": "butifarra",
+      "nombre": "Butifarra",
+      "categoria": "Adicionales",
+      "precio": 800,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791009169/yp0rwzx0fgxhizk3pjzp.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 10,
+      "destacado": false
+    },
+    {
+      "id": "-P32rCi0W-_ysRXAykNF",
+      "nombre": "Gaseosa Pool 1.5 lt",
+      "categoria": "Adicionales",
+      "precio": 4000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791066229/nmw3z7jf2228tvq9efhe.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 0,
+      "destacado": true
+    }
+  ]
+}

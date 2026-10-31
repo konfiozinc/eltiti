@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>El Titi — Menú</title>
+<style>
+:root{--fondo:#FBF7F0;--tinta:#4A3222;--acento:#E8791A;--suave:#efe6d8;--tarjeta:#1e1e1e;--radio:18px}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--fondo);color:var(--tinta)}
+header.hero{position:relative;padding:56px 20px 40px;text-align:center;background:linear-gradient(160deg,#1c1c1c,#0a0a0a);color:#fff}
+header.hero h1{margin:0;font-size:clamp(1.9rem,6vw,3rem);letter-spacing:.5px}
+header.hero p{margin:10px auto 0;max-width:640px;font-size:clamp(.95rem,2.6vw,1.1rem);opacity:.9}
+.cont{max-width:1120px;margin:0 auto;padding:0 16px}
+nav.cats{position:sticky;top:0;z-index:20;display:flex;gap:8px;overflow-x:auto;padding:12px 16px;background:#171717;border-bottom:1px solid var(--suave);scrollbar-width:none}
+nav.cats::-webkit-scrollbar{display:none}
+nav.cats button{flex:0 0 auto;border:1px solid var(--suave);background:var(--tarjeta);color:var(--tinta);padding:11px 16px;border-radius:999px;font-size:.95rem;font-weight:600;cursor:pointer;min-height:44px}
+nav.cats button.on{background:var(--acento);border-color:var(--acento);color:#fff}
+main{padding:22px 0 120px}
+section.cat{margin:26px 0 8px}
+section.cat h2{font-size:1.25rem;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+section.cat h2::after{content:"";flex:1;height:1px;background:var(--suave)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+article.p{background:var(--tarjeta);border:1px solid var(--suave);border-radius:var(--radio);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(74,50,34,.06)}
+article.p img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--suave)}
+article.p .cuerpo{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+article.p h3{margin:0;font-size:1.02rem}
+article.p .precio{font-weight:800;color:var(--acento);font-size:1.08rem}
+article.p .que{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+article.p .que button{flex:1;min-height:44px;border:0;border-radius:12px;font-weight:700;cursor:pointer;font-size:.95rem}
+.ver{background:var(--suave);color:var(--tinta)}
+.add{background:var(--acento);color:#fff}
+article.p.agotado img{filter:grayscale(1);opacity:.55}
+.sello{display:inline-block;background:#b3261e;color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:999px;text-transform:uppercase}
+.modal{position:fixed;inset:0;background:rgba(20,12,6,.62);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+.modal.on{display:flex}
+.modal .caja{background:var(--tarjeta);border-radius:20px;max-width:560px;width:100%;max-height:90vh;overflow:auto}
+.modal img{width:100%;aspect-ratio:16/10;object-fit:cover}
+.modal .txt{padding:16px 18px 20px}
+.modal h3{margin:0 0 6px;font-size:1.3rem}
+.modal .cerrar{margin-top:14px;width:100%;min-height:48px;border:0;border-radius:12px;background:var(--tinta);color:#fff;font-weight:700;cursor:pointer}
+.carrito{position:fixed;inset:auto 0 0 0;background:var(--tarjeta);border-top:2px solid var(--acento);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:12px;align-items:center;justify-content:space-between;z-index:50;box-shadow:0 -4px 20px rgba(74,50,34,.12)}
+.carrito .tot{font-weight:800}
+.carrito button{min-height:48px;padding:0 18px;border:0;border-radius:14px;background:var(--acento);color:#fff;font-weight:800;cursor:pointer}
+.carrito button:disabled{background:var(--suave);color:#a8a8a8;cursor:not-allowed}
+.aviso{max-width:1120px;margin:16px auto;padding:14px 16px;border-radius:14px;background:#3a2a10;border:1px solid #FFC300;color:#FFC300}
+.cargando{text-align:center;padding:60px 0;color:#a8a8a8}
+@media(max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:12px}article.p h3{font-size:.92rem}article.p .cuerpo{padding:10px 10px 12px}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <h1 id="marca">Col Sabor</h1>
+  <p id="lema">Comida casera con sazón de casa</p>
+</header>
+<div class="cont"><div id="aviso"></div></div>
+<nav class="cats" id="cats" aria-label="Categorías"></nav>
+<main class="cont"><div id="lista"><p class="cargando">Cargando el menú…</p></div></main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitulo">
+  <div class="caja">
+    <img id="mImg" alt="" />
+    <div class="txt">
+      <h3 id="mTitulo"></h3>
+      <p id="mDesc"></p>
+      <div id="mPrecio" class="precio"></div>
+      <button class="cerrar" id="mCerrar">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="carrito">
+  <div><span class="tot" id="tot">$ 0</span> <span id="cant" style="opacity:.7"></span></div>
+  <button id="pedir" disabled>Pedir por WhatsApp</button>
+</div>
+
+<script>
+/* KONFÍO ZINC · KZ-REDESIGN-010 · prototipo funcional.
+   Configuración por negocio: es lo único que cambia entre los dos menús. */
+const NEGOCIO = {
+  nombre: "El Titi",
+  lema: "Comidas rápidas, hechas al momento",
+  carpeta: "../",
+  ns: "menu",          // raíz del sitio
+  paleta: { fondo: "#121212", tinta: "#F5F5F5", acento: "#D62828", suave: "#2a2a2a" },
+  /* Productos que NO se publican hasta que el CTO confirme nombre o precio.
+     Siguen intactos en Firebase: aquí sólo se excluyen de la vista pública. */
+  pendientesAprobacion: [
+    "-P32oJslKTLLahoiqsfZ", // Salchipapa XXX · $22.000
+    "-P32q0rM6C9-J2FmpX-7", // Picada · $35.000
+    "-P32rCi0W-_ysRXAykNF", // Gaseosa Pool 1.5 lt · $4.000
+    "hb-doble",             // nombre cargado = "Hamburguesas" (es la categoría)
+    "hb-x"                  // nombre cargado = "Hamburguesa Doble" (duplica hb-doble)
+  ]
+};
+
+const $ = (s) => document.querySelector(s);
+const plato = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+let productos = [], config = {}, carrito = JSON.parse(localStorage.getItem("ks-carrito") || "{}");
+
+function pintarPaleta() {
+  const r = document.documentElement.style;
+  r.setProperty("--fondo", NEGOCIO.paleta.fondo);
+  r.setProperty("--tinta", NEGOCIO.paleta.tinta);
+  r.setProperty("--acento", NEGOCIO.paleta.acento);
+  r.setProperty("--suave", NEGOCIO.paleta.suave);
+  $("#marca").textContent = NEGOCIO.nombre;
+  $("#lema").textContent = NEGOCIO.lema;
+}
+
+/* Catálogo: (1) Firebase, que es la fuente autorizada por el CTO; (2) la copia local
+   verificada, si Firebase no responde. Los dos traen los identificadores originales:
+   nunca se sustituyen productos reales por registros seed-*. */
+function qaMenu() {
+  try {
+    const host = location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1") return null;
+    if (new URLSearchParams(location.search).get("emulador") !== "1") return null;
+    return { base: "http://127.0.0.1:9000", ns: "?ns=demo-sec-v5-default-rtdb" };
+  } catch (e) { return null; }
+}
+
+function baseDatos() {
+  const qa = qaMenu();
+  const real = config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com";
+  const base = ((qa && qa.base) || real).replace(/\?.*$/, "").replace(/\/$/, "");
+  return { base: base, consultaNs: (qa && qa.ns) || "" };
+}
+
+async function catalogoRemoto() {
+  const b = baseDatos();
+  const r = await fetch(b.base + "/" + NEGOCIO.ns + "/productos.json" + b.consultaNs, { cache: "no-store" });
+  if (!r.ok) throw new Error("Firebase HTTP " + r.status);
+  const obj = await r.json();
+  if (!obj || typeof obj !== "object") throw new Error("Firebase sin catálogo");
+  return Object.entries(obj).map(([id, v]) => Object.assign({ id: id }, v)).filter((p) => p && p.nombre);
+}
+
+async function catalogoLocal() {
+  const r = await fetch(NEGOCIO.carpeta + "data/productos.produccion.json", { cache: "no-store" });
+  if (!r.ok) throw new Error("copia local HTTP " + r.status);
+  return (await r.json()).productos || [];
+}
+
+async function cargar() {
+  try {
+    const rc = fetch(NEGOCIO.carpeta + "data/configuracion.json", { cache: "no-store" }).catch(() => null);
+    let lista = null, origen = "";
+    try { lista = await catalogoRemoto(); origen = "Firebase"; }
+    catch (e) { console.warn("[menú] catálogo remoto no disponible: " + e.message); }
+    if (!lista || !lista.length) { lista = await catalogoLocal(); origen = "copia local verificada"; }
+    const ocultos = new Set((NEGOCIO.pendientesAprobacion || []).map(String));
+    productos = lista.filter((p) => p && !ocultos.has(String(p.id)));
+    const res = await rc;
+    if (res && res.ok) { try { config = await res.json(); } catch (e) { config = {}; } }
+    if (!productos.length) throw new Error("El catálogo llegó vacío");
+    console.info("[menú] " + productos.length + " productos desde " + origen);
+    pintar();
+  } catch (e) {
+    $("#lista").innerHTML = '<p class="cargando">No pudimos cargar el menú. Revisa tu conexión y vuelve a intentarlo.</p>';
+    $("#aviso").innerHTML = '<div class="aviso">El menú no está disponible en este momento. Si ya tienes un pedido, escríbenos por WhatsApp.</div>';
+    console.warn("[menú] " + e.message);
+  }
+}
+
+function categorias() {
+  const presentes = [...new Set(productos.map((p) => p.categoria).filter(Boolean))];
+  const orden = (config.categorias || []).filter((c) => presentes.includes(c));
+  return orden.concat(presentes.filter((c) => !orden.includes(c)));
+}
+
+function pintar() {
+  const cats = categorias();
+  $("#cats").innerHTML = cats.map((c, i) =>
+    '<button data-cat="' + c + '"' + (i === 0 ? ' class="on"' : "") + '>' + c + '</button>').join("");
+  $("#cats").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    $("#cats").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    const s = document.getElementById("cat-" + b.dataset.cat);
+    if (s) s.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  $("#lista").innerHTML = cats.map((c) => {
+    const items = productos.filter((p) => p.categoria === c);
+    return '<section class="cat" id="cat-' + c + '"><h2>' + c + '</h2><div class="grid">' +
+      items.map(tarjeta).join("") + "</div></section>";
+  }).join("");
+  $("#lista").querySelectorAll("[data-ver]").forEach((b) => b.addEventListener("click", () => abrir(b.dataset.ver)));
+  $("#lista").querySelectorAll("[data-add]").forEach((b) => b.addEventListener("click", () => sumar(b.dataset.add)));
+  pintarCarrito();
+}
+
+/* La imagen puede ser una URL absoluta (Cloudinary) o una ruta del repo
+   (assets/productos/…): las dos se usan tal cual, sin prefijar la absoluta. */
+function urlImagen(p) {
+  const v = String((p && p.imagen) || "");
+  return /^https?:\/\//i.test(v) ? v : NEGOCIO.carpeta + v.replace(/^\.?\//, "");
+}
+
+function tarjeta(p) {
+  const agotado = p.agotado === true;
+  const img = urlImagen(p);
+  return '<article class="p' + (agotado ? " agotado" : "") + '">' +
+    '<img src="' + img + '" alt="' + esc(p.nombre) + '" loading="lazy" onerror="this.src=\'' + NEGOCIO.carpeta + 'assets/logo/no-image.png\'">' +
+    '<div class="cuerpo"><h3>' + esc(p.nombre) + (agotado ? ' <span class="sello">Agotado</span>' : "") + "</h3>" +
+    '<div class="precio">' + plato.format(p.precio || 0) + "</div>" +
+    '<div class="que"><button class="ver" data-ver="' + esc(p.id) + '">Ver</button>' +
+    '<button class="add" data-add="' + esc(p.id) + '"' + (agotado ? " disabled" : "") + ">Agregar</button></div></div></article>";
+}
+
+function abrir(id) {
+  const p = productos.find((x) => String(x.id) === String(id));
+  if (!p) return;
+  $("#mImg").src = urlImagen(p);
+  $("#mTitulo").textContent = p.nombre;
+  $("#mDesc").textContent = (p.etiquetas || []).join(" · ") || (p.tiempo ? "Listo en " + p.tiempo : "");
+  $("#mPrecio").textContent = plato.format(p.precio || 0) + (p.agotado ? " · Agotado" : "");
+  $("#modal").classList.add("on");
+}
+$("#mCerrar").addEventListener("click", () => $("#modal").classList.remove("on"));
+$("#modal").addEventListener("click", (e) => { if (e.target.id === "modal") $("#modal").classList.remove("on"); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("#modal").classList.remove("on"); });
+
+function sumar(id) {
+  const p = productos.find((x) => String(x.id) === String(id));
+  if (!p || p.agotado) return;
+  carrito[id] = (carrito[id] || 0) + 1;
+  localStorage.setItem("ks-carrito", JSON.stringify(carrito));
+  pintarCarrito();
+}
+
+function pintarCarrito() {
+  let total = 0, n = 0;
+  for (const [id, cant] of Object.entries(carrito)) {
+    const p = productos.find((x) => String(x.id) === String(id));
+    if (!p) continue;
+    total += (p.precio || 0) * cant; n += cant;
+  }
+  $("#tot").textContent = plato.format(total);
+  $("#cant").textContent = n ? "(" + n + ")" : "";
+  $("#pedir").disabled = n === 0;
+}
+
+$("#pedir").addEventListener("click", async () => {
+  const btn = $("#pedir");
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = "Registrando pedido…";
+  const KP = "ks-intento", KC = "ks-codigo";
+  let uuid = sessionStorage.getItem(KP);
+  if (!uuid) { uuid = (crypto.randomUUID ? crypto.randomUUID() : "p-" + Date.now() + "-" + Math.random().toString(16).slice(2)); sessionStorage.setItem(KP, uuid); }
+  let codigo = sessionStorage.getItem(KC);
+  if (!codigo) { const a = new Uint8Array(12); crypto.getRandomValues(a); codigo = Array.from(a).map((b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join(""); sessionStorage.setItem(KC, codigo); }
+  const items = Object.entries(carrito).map(([id, cant]) => { const p = productos.find((x) => String(x.id) === String(id)); return p ? { id: p.id, nombre: p.nombre, precio: p.precio || 0, cantidad: cant } : null; }).filter(Boolean);
+  if (!items.length) { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; return; }
+  /* QA aislado: solo localhost/127.0.0.1 + ?emulador=1. En cualquier otro caso se usa la
+     configuracion real del negocio. Doble guarda: el host se comprueba primero. */
+  const qa = qaMenu();
+  const b = baseDatos();
+  const base = b.base;
+  const consultaNs = b.consultaNs;
+  if (qa) console.log("[QA] menu escribiendo en el EMULADOR · ns demo-sec-v5-default-rtdb");
+  const ns = NEGOCIO.ns;
+  const cuerpo = {};
+  cuerpo[ns + "/pedidos/" + uuid] = { codigoConsulta: codigo, estado: "COTIZACION_PENDIENTE", total: 0, fechaCreacion: Date.now(), items };
+  cuerpo[ns + "/pedidos_privados/" + uuid] = { codigoConsulta: codigo, items };
+  cuerpo[ns + "/pedidos_publico/" + codigo] = { estado: "COTIZACION_PENDIENTE", fecha: new Date().toISOString().slice(0, 10), total: 0 };
+  try {
+    const r = await fetch(base + "/.json" + consultaNs, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
+    if (r.status !== 200) throw new Error("respuesta " + r.status);
+    sessionStorage.removeItem(KP); sessionStorage.removeItem(KC);
+    carrito = {}; localStorage.setItem("ks-carrito", "{}"); pintarCarrito();
+    const tel = (config.whatsapp || config.telefono || "").toString().replace(/[^0-9]/g, "");
+    const resumen = items.map((i) => "• " + i.cantidad + "x " + i.nombre).join("\n");
+    alert("Pedido registrado. Tu codigo de consulta es " + codigo + ". El importe queda pendiente de confirmacion.");
+    if (tel) window.open("https://wa.me/57" + tel + "?text=" + encodeURIComponent("Pedido " + codigo + " en " + NEGOCIO.nombre + ":\n" + resumen + "\nImporte pendiente de confirmacion."), "_blank");
+  } catch (e) {
+    alert("No pudimos registrar tu pedido (" + e.message + "). Revisa tu conexion y reintenta: no se cobro nada y tu intento queda guardado.");
+  } finally { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); }
+});
+
+function esc(v) { return String(v == null ? "" : v).replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+pintarPaleta();
+cargar();
+</script>
+</body>
+</html>
+
+

@@ -200,6 +200,30 @@ input,select,textarea{font-family:inherit;font-size:15px}
 
 <script src="admin-config.js"></script>
 <script>
+/* KONFIO ZINC · KZ-REDESIGN-010 · QA aislado (FASE 1: antes de crear la app).
+   Doble guarda: host local Y ?emulador=1. En produccion no hace nada.
+   Reescribe la config ANTES de initializeApp para que la UNICA app apunte al proyecto ficticio. */
+(function () {
+  try {
+    var host = location.hostname;
+    var esLocal = host === "localhost" || host === "127.0.0.1";
+    var quiere = new URLSearchParams(location.search).get("emulador") === "1";
+    if (!quiere) return;
+    if (!esLocal) { console.warn("[QA] modo emulador RECHAZADO fuera de localhost/127.0.0.1 (host: " + host + ")"); return; }
+    window.__QA_EMU = true;
+    window.ADMIN_CONFIG = window.ADMIN_CONFIG || {};
+    window.ADMIN_CONFIG.firebase = {
+      apiKey: "fake-key",
+      authDomain: "demo-sec-v5.firebaseapp.com",
+      databaseURL: "http://127.0.0.1:9000?ns=demo-sec-v5-default-rtdb",
+      projectId: "demo-sec-v5",
+      appId: "demo-ficticio"
+    };
+    console.log("[QA] config reescrita al proyecto ficticio demo-sec-v5 ANTES de initializeApp");
+  } catch (e) { console.warn("[QA] fase 1: " + e.message); }
+})();
+</script>
+<script>
 // ⚠️ Instancias de Firebase FUERA del estado reactivo de Alpine
 // (Alpine envuelve en Proxy y rompe los métodos internos de Firebase).
 let firebaseAuth = null;
@@ -218,8 +242,19 @@ function getAudioAlerta(){
 
 function initFirebase(){
   if (firebase.apps.length === 0) firebase.initializeApp(window.ADMIN_CONFIG.firebase);
+/* KONFIO ZINC · KZ-REDESIGN-010 · QA aislado (FASE 2: conectar ANTES de que el panel cree sus instancias) */
+if (window.__QA_EMU) {
+  try {
+    /* Se crean AQUI las instancias y se conectan al emulador; cuando el panel haga
+       firebase.auth() / firebase.database() recibira estas mismas, ya conectadas. */
+    firebase.auth().useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+    firebase.database().useEmulator("127.0.0.1", 9000);
+    console.log("[QA] emulador conectado ANTES de las instancias del panel · auth 9099 · rtdb 9000");
+  } catch (e) { console.warn("[QA] fase 2: " + e.message); }
+}
   firebaseAuth = firebase.auth();
   firebaseDB = firebase.database();
+
 }
 
 function admin(){
@@ -231,24 +266,50 @@ function admin(){
     sonidoActivado: false, idsVistos: null, nuevos: {},
     filtros: [
       { key:'todos', label:'Todos' },
+      { key:'cotizacion_pendiente', label:'Cotización pendiente' },
+      { key:'confirmado', label:'Confirmado' },
       { key:'recibido', label:'Recibido' },
       { key:'preparando', label:'Preparando' },
       { key:'en_camino', label:'En camino' },
       { key:'entregado', label:'Entregado' },
       { key:'cancelado', label:'Cancelado' }
     ],
-    estadoLabel: { recibido:'Recibido', preparando:'Preparando', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' },
-    estadoColor: { recibido:'#2563EB', preparando:'#D97706', en_camino:'#7C3AED', entregado:'#16A34A', cancelado:'#DC2626' },
-    siguiente: { recibido:'preparando', preparando:'en_camino', en_camino:'entregado' },
-    siguienteLabel: { recibido:'Preparar', preparando:'En camino', en_camino:'Entregar' },
+    estadoLabel: { cotizacion_pendiente:'Cotización pendiente', confirmado:'Confirmado', recibido:'Recibido', preparando:'Preparando', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' },
+    estadoColor: { cotizacion_pendiente:'#B45309', confirmado:'#166534', recibido:'#2563EB', preparando:'#D97706', en_camino:'#7C3AED', entregado:'#16A34A', cancelado:'#DC2626' },
+    siguiente: { cotizacion_pendiente:'confirmado', confirmado:'preparando', recibido:'preparando', preparando:'en_camino', en_camino:'entregado' },
+    siguienteLabel: { cotizacion_pendiente:'Confirmar importe', confirmado:'Preparar', recibido:'Preparar', preparando:'En camino', en_camino:'Entregar' },
 
     init(){
       initFirebase();
       try { this.sonidoActivado = localStorage.getItem(this.claveSonido) === '1'; } catch(e) {}
-      firebaseAuth.onAuthStateChanged(u => {
-        this.usuario = u;
-        this.authReady = true;
-        if (u) this.escuchar();
+      firebaseAuth.onAuthStateChanged(async u => {
+        // Invalidar callbacks anteriores y desconectar cualquier lectura del usuario previo.
+        const secuencia = (this._secuenciaAuth || 0) + 1;
+        this._secuenciaAuth = secuencia;
+        this.limpiarSuscripciones();
+        this.usuario = null;
+        this.pedidos = []; this._publicos = {}; this._privados = {}; this.idsVistos = null; this.nuevos = {};
+        this.authReady = false;
+        if (!u) { this.authReady = true; return; }
+        try {
+          const snap = await firebaseDB.ref('_admin/' + u.uid).once('value');
+          if (secuencia !== this._secuenciaAuth) return;
+          const rol = snap.val();
+          const negocio = this.cfg.ruta === 'menu' ? 'titi' : this.cfg.ruta;
+          if (!rol || rol.activo !== true || rol.negocio !== negocio) {
+            this.loginError = 'Esta cuenta no tiene permiso activo para administrar ' + this.cfg.nombre + '.';
+            await firebaseAuth.signOut();
+            return;
+          }
+          this.usuario = u;
+          this.escuchar();
+        } catch (err) {
+          if (secuencia !== this._secuenciaAuth) return;
+          this.loginError = 'No se pudo comprobar el permiso de administración.';
+          await firebaseAuth.signOut();
+        } finally {
+          if (secuencia === this._secuenciaAuth) this.authReady = true;
+        }
       });
     },
 
@@ -328,6 +389,20 @@ function admin(){
       }, 15000);
     },
 
+    limpiarSuscripciones(){
+      for (const suscripcion of (this._suscripciones || [])) {
+        suscripcion.ref.off('value', suscripcion.callback);
+      }
+      this._suscripciones = [];
+    },
+
+    observar(path, callback, onError){
+      const referencia = firebaseDB.ref(path);
+      referencia.on('value', callback, onError);
+      if (!this._suscripciones) this._suscripciones = [];
+      this._suscripciones.push({ref: referencia, callback});
+    },
+
     escuchar(){
       // Los pedidos viven en dos nodos: el público (rastreo por código, sin datos
       // del cliente) y el privado (nombre, teléfono, dirección, pago, notas).
@@ -335,12 +410,12 @@ function admin(){
       this._publicos = {};
       this._privados = {};
 
-      firebaseDB.ref(this.cfg.ruta + '/pedidos_privados').on('value', snap => {
+      this.observar(this.cfg.ruta + '/pedidos_privados', snap => {
         this._privados = snap.val() || {};
         this._fusionar();
       }, err => console.warn('[panel] No se pudieron leer los datos del cliente:', err.message));
 
-      firebaseDB.ref(this.cfg.ruta + '/pedidos').on('value', snap => {
+      this.observar(this.cfg.ruta + '/pedidos', snap => {
         this._publicos = snap.val() || {};
         this._fusionar();
       }, err => { this.cargando = false; this.toastMsg('Error al cargar: ' + err.message); });
@@ -354,7 +429,8 @@ function admin(){
         ...data[k],
         // `cliente` viene del nodo privado. El respaldo en data[k] cubre los
         // pedidos antiguos que todavía no se han migrado.
-        cliente: (priv[k] && priv[k].cliente) || data[k].cliente || {}
+        cliente: (priv[k] && priv[k].cliente) || data[k].cliente || {},
+        estado: ({COTIZACION_PENDIENTE:'cotizacion_pendiente',CONFIRMADO:'confirmado',PREPARANDO:'preparando',EN_CAMINO:'en_camino',ENTREGADO:'entregado',CANCELADO:'cancelado'})[data[k].estado] || data[k].estado
       }));
       lista.sort((a, b) => (b.fechaCreacion || 0) - (a.fechaCreacion || 0));
 
@@ -392,17 +468,48 @@ function admin(){
       return d.toLocaleString('es-CO', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
     },
 
-    cambiarEstado(p){
-      const sig = this.siguiente[p.estado];
-      if (!sig) return;
-      firebaseDB.ref(this.cfg.ruta + '/pedidos/' + p.id).update({ estado: sig, fechaActualizacion: firebase.database.ServerValue.TIMESTAMP })
-        .catch(e => this.toastMsg('Error: ' + e.message));
+    async guardarEstadoPedido(p, estado, totalConfirmado){
+      const base = this.cfg.ruta;
+      const cambios = {};
+      cambios[base + '/pedidos/' + p.id + '/estado'] = estado;
+      cambios[base + '/pedidos/' + p.id + '/fechaActualizacion'] = firebase.database.ServerValue.TIMESTAMP;
+      if (totalConfirmado !== undefined) cambios[base + '/pedidos/' + p.id + '/total'] = totalConfirmado;
+      const codigo = p.codigoConsulta;
+      if (typeof codigo === 'string' && /^[A-Za-z0-9_-]{6,64}$/.test(codigo)) {
+        const publico = base + '/pedidos_publico/' + codigo;
+        const existe = await firebaseDB.ref(publico).once('value');
+        if (existe.exists()) {
+          cambios[publico + '/estado'] = estado;
+          if (totalConfirmado !== undefined) cambios[publico + '/total'] = totalConfirmado;
+        }
+      }
+      await firebaseDB.ref().update(cambios);
+      this.toastMsg('✓ Estado del pedido actualizado');
     },
 
-    cancelarPedido(p){
+    async cambiarEstado(p){
+      const sig = this.siguiente[p.estado];
+      if (!sig) return;
+      let total;
+      if (p.estado === 'cotizacion_pendiente') {
+        const entrada = prompt('Importe final confirmado en pesos colombianos (COP):');
+        if (entrada === null) return;
+        total = Number(entrada.trim());
+        if (!Number.isSafeInteger(total) || total <= 0) {
+          this.toastMsg('El importe debe ser un número entero mayor que cero.');
+          return;
+        }
+      }
+      const estado = ({confirmado:'CONFIRMADO',preparando:'PREPARANDO',en_camino:'EN_CAMINO',entregado:'ENTREGADO'})[sig];
+      if (!estado) return;
+      try { await this.guardarEstadoPedido(p, estado, total); }
+      catch(e){ this.toastMsg('Error: ' + e.message); }
+    },
+
+    async cancelarPedido(p){
       if (!confirm('¿Cancelar el pedido ' + (p.numeroPedido || '') + '?')) return;
-      firebaseDB.ref(this.cfg.ruta + '/pedidos/' + p.id).update({ estado: 'cancelado', fechaActualizacion: firebase.database.ServerValue.TIMESTAMP })
-        .catch(e => this.toastMsg('Error: ' + e.message));
+      try { await this.guardarEstadoPedido(p, 'CANCELADO'); }
+      catch(e){ this.toastMsg('Error: ' + e.message); }
     },
 
     login(){
@@ -415,7 +522,7 @@ function admin(){
         .finally(() => this.loginLoading = false);
     },
 
-    logout(){ firebaseAuth.signOut(); this.pedidos = []; },
+    logout(){ this.limpiarSuscripciones(); this.pedidos = []; this._publicos = {}; this._privados = {}; firebaseAuth.signOut(); },
 
     toastMsg(msg){
       this.toast = msg;
@@ -425,5 +532,6 @@ function admin(){
   };
 }
 </script>
+
 </body>
 </html>

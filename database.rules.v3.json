@@ -1,0 +1,150 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "_admin": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": false
+      }
+    },
+    "menu": {
+      "productos": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+      },
+      "promo": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+      },
+      "horario": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+      },
+      "meta": {
+        ".read": true,
+        "contadorPedidos": {
+          ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+        }
+      },
+      "reseñas": {
+        ".read": true,
+        "$resena": {
+          ".write": "!data.exists() && newData.hasChildren(['texto']) && newData.child('texto').isString() && newData.child('texto').val().length <= 600"
+        }
+      },
+      "pedidos": {
+        ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+        ".indexOn": [
+          "codigoConsulta"
+        ],
+        "$pedido": {
+          ".write": "!data.exists() && newData.hasChildren(['codigoConsulta', 'estado'])"
+        }
+      },
+      "pedidos_publico": {
+        "$codigo": {
+          ".read": true,
+          ".write": "!data.exists() && newData.hasChildren(['estado'])",
+          ".validate": "newData.hasChildren(['estado']) && newData.child('estado').isString()",
+          "estado": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "fecha": {
+            ".validate": "newData.isString()"
+          },
+          "total": {
+            ".validate": "newData.isNumber()"
+          }
+        }
+      },
+      "pedidos_privados": {
+        ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+        "$pedido": {
+          ".write": "!data.exists() && newData.hasChildren(['codigoConsulta'])"
+        }
+      }
+    },
+    "colsabor": {
+      "productos": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+      },
+      "promo": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+      },
+      "horario": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+      },
+      "meta": {
+        ".read": true,
+        "contadorPedidos": {
+          ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+        }
+      },
+      "reseñas": {
+        ".read": true,
+        "$resena": {
+          ".write": "!data.exists() && newData.hasChildren(['texto']) && newData.child('texto').isString() && newData.child('texto').val().length <= 600"
+        }
+      },
+      "pedidos": {
+        ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+        ".indexOn": [
+          "codigoConsulta"
+        ],
+        "$pedido": {
+          ".write": "!data.exists() && newData.hasChildren(['codigoConsulta', 'estado'])"
+        }
+      },
+      "pedidos_publico": {
+        "$codigo": {
+          ".read": true,
+          ".write": "!data.exists() && newData.hasChildren(['estado'])",
+          ".validate": "newData.hasChildren(['estado']) && newData.child('estado').isString()",
+          "estado": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "fecha": {
+            ".validate": "newData.isString()"
+          },
+          "total": {
+            ".validate": "newData.isNumber()"
+          }
+        }
+      },
+      "pedidos_privados": {
+        ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+        "$pedido": {
+          ".write": "!data.exists() && newData.hasChildren(['codigoConsulta'])"
+        }
+      }
+    },
+    "menu_backup": {
+      ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+      ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+    },
+    "dta-chanclas": {
+      ".read": false,
+      ".write": false,
+      "productos": {
+        ".read": true
+      },
+      "meta": {
+        ".read": true
+      }
+    },
+    "nbc-company": {
+      ".read": false,
+      ".write": false,
+      "productos": {
+        ".read": true
+      },
+      "meta": {
+        ".read": true
+      }
+    }
+  }
+}

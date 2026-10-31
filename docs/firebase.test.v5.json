@@ -1,0 +1,17 @@
+﻿{
+  "database": {
+    "rules": "../database.rules.v5.candidata.json"
+  },
+  "emulators": {
+    "database": {
+      "port": 9000
+    },
+    "auth": {
+      "port": 9099
+    },
+    "ui": {
+      "enabled": false
+    }
+  }
+}
+

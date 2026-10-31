@@ -23,7 +23,7 @@ fuente de datos.
   /icons       → íconos PWA (icon-192.png, icon-512.png, favicon.png)
 
 /data
-  productos.json       → snapshot de referencia del catálogo inicial (NO se usa en runtime)
+  productos.json       → contenido base del catálogo: `scripts.js` (cargarContenidoBase) lo carga al arrancar y luego Firebase lo sobrescribe en vivo
   configuracion.json    → snapshot de referencia de horario/promo/categorías (NO se usa en runtime)
 
 index.html
