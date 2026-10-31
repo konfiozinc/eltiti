@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>El Titi — Menú</title>
+<link rel="icon" href="../assets/logo/logo-el-titi.png" />
 <style>
 :root{--fondo:#FBF7F0;--tinta:#4A3222;--acento:#E8791A;--suave:#efe6d8;--tarjeta:#1e1e1e;--radio:18px}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--fondo);color:var(--tinta)}
@@ -198,7 +199,7 @@ function tarjeta(p) {
   const agotado = p.agotado === true;
   const img = urlImagen(p);
   return '<article class="p' + (agotado ? " agotado" : "") + '">' +
-    '<img src="' + img + '" alt="' + esc(p.nombre) + '" loading="lazy" onerror="this.src=\'' + NEGOCIO.carpeta + 'assets/logo/no-image.png\'">' +
+    '<img src="' + img + '" alt="' + esc(p.nombre) + '" loading="lazy" onerror="this.src=\'' + NEGOCIO.carpeta + 'assets/logo/no-image.webp\'">' +
     '<div class="cuerpo"><h3>' + esc(p.nombre) + (agotado ? ' <span class="sello">Agotado</span>' : "") + "</h3>" +
     '<div class="precio">' + plato.format(p.precio || 0) + "</div>" +
     '<div class="que"><button class="ver" data-ver="' + esc(p.id) + '">Ver</button>' +
