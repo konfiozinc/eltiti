@@ -1,5 +1,5 @@
 ﻿// Escenarios ANÓNIMOS (visitante) contra el emulador RTDB con las reglas propuestas.
-const BASE = "http://127.0.0.1:9000"; const NS = "demo-sec-006-default-rtdb";
+const BASE = "http://127.0.0.1:9000"; const NS = "demo-sec-006-default-rtdb"; const SUF = Date.now().toString().slice(-6);
 const P = "demo-sec-006";
 let ok = 0, fail = 0;
 const chk = async (nombre, esperado, fn) => {
@@ -43,13 +43,14 @@ const req = async (m, ruta, cuerpo) => {
   await chk("NO toca el contador", 401, () => req("PUT", "menu/meta/contadorPedidos", 999));
   await chk("NO toca el respaldo", 401, () => req("PUT", "menu_backup/productos/p1", { nombre: "borrado" }));
   await chk("NO escribe el árbol de otro negocio", 401, () => req("PUT", "colsabor/productos/nuevo", { nombre: "inyectado" }));
-  await chk("SÍ crea un pedido nuevo (flujo legítimo)", 200, () => req("PUT", "menu/pedidos/PED-9998", { codigoConsulta: "NUEV01", estado: "PENDIENTE" }));
-  await chk("SÍ crea su registro privado", 200, () => req("PUT", "menu/pedidos_privados/PED-9998", { codigoConsulta: "NUEV01", telefono: "3001234567" }));
-  await chk("SÍ crea una reseña", 200, () => req("PUT", "menu/reseñas/r2", { texto: "Otra reseña ficticia" }));
+  await chk("SÍ crea un pedido nuevo (flujo legítimo)", 200, () => req("PUT", "menu/pedidos/PED-" + SUF, { codigoConsulta: "NUEV01", estado: "PENDIENTE" }));
+  await chk("SÍ crea su registro privado", 200, () => req("PUT", "menu/pedidos_privados/PED-" + SUF, { codigoConsulta: "NUEV01", telefono: "3001234567" }));
+  await chk("SÍ crea una reseña", 200, () => req("PUT", "menu/reseñas/R" + SUF, { texto: "Otra reseña ficticia" }));
   await chk("NO sobrescribe una reseña ajena", 401, () => req("PUT", "menu/reseñas/r1", { texto: "cambiada" }));
   console.log("\n  comprobaciones: " + (ok + fail) + " · PASA " + ok + " · FALLA " + fail);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error("ERROR: " + e.message); process.exit(2); });
+
 
 
 
