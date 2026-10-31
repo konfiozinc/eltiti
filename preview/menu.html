@@ -196,7 +196,19 @@ $("#pedir").addEventListener("click", async () => {
   if (!codigo) { const a = new Uint8Array(12); crypto.getRandomValues(a); codigo = Array.from(a).map((b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join(""); sessionStorage.setItem(KC, codigo); }
   const items = Object.entries(carrito).map(([id, cant]) => { const p = productos.find((x) => String(x.id) === String(id)); return p ? { id: p.id, nombre: p.nombre, precio: p.precio || 0, cantidad: cant } : null; }).filter(Boolean);
   if (!items.length) { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; return; }
-  const base = (config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com").replace(/\/$/, "");
+  /* QA aislado: solo localhost/127.0.0.1 + ?emulador=1. En cualquier otro caso se usa la
+     configuracion real del negocio. Doble guarda: el host se comprueba primero. */
+  const __QA_MENU = (function () {
+    try {
+      const host = location.hostname;
+      const esLocal = host === "localhost" || host === "127.0.0.1";
+      if (!esLocal) return null;
+      if (new URLSearchParams(location.search).get("emulador") !== "1") return null;
+      return { base: "http://127.0.0.1:9000?ns=demo-sec-v5-default-rtdb", ficticio: true };
+    } catch (e) { return null; }
+  })();
+  const base = ((__QA_MENU && __QA_MENU.base) || config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com").replace(/\/$/, "");
+  if (__QA_MENU) console.log("[QA] menu escribiendo en el EMULADOR · ns demo-sec-v5-default-rtdb");
   const ns = NEGOCIO.ns;
   const cuerpo = {};
   cuerpo[ns + "/pedidos/" + uuid] = { codigoConsulta: codigo, estado: "COTIZACION_PENDIENTE", total: 0, fechaCreacion: Date.now(), items };
