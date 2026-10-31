@@ -204,10 +204,11 @@ $("#pedir").addEventListener("click", async () => {
       const esLocal = host === "localhost" || host === "127.0.0.1";
       if (!esLocal) return null;
       if (new URLSearchParams(location.search).get("emulador") !== "1") return null;
-      return { base: "http://127.0.0.1:9000?ns=demo-sec-v5-default-rtdb", ficticio: true };
+      return { base: "http://127.0.0.1:9000", ns: "?ns=demo-sec-v5-default-rtdb" };
     } catch (e) { return null; }
   })();
-  const base = ((__QA_MENU && __QA_MENU.base) || config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com").replace(/\/$/, "");
+  const base = ((__QA_MENU && __QA_MENU.base) || config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com").replace(/[/?].*$/, "");
+  const consultaNs = (__QA_MENU && __QA_MENU.ns) || "";
   if (__QA_MENU) console.log("[QA] menu escribiendo en el EMULADOR · ns demo-sec-v5-default-rtdb");
   const ns = NEGOCIO.ns;
   const cuerpo = {};
@@ -215,7 +216,7 @@ $("#pedir").addEventListener("click", async () => {
   cuerpo[ns + "/pedidos_privados/" + uuid] = { codigoConsulta: codigo, items };
   cuerpo[ns + "/pedidos_publico/" + codigo] = { estado: "COTIZACION_PENDIENTE", fecha: new Date().toISOString().slice(0, 10), total: 0 };
   try {
-    const r = await fetch(base + "/.json", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
+    const r = await fetch(base + "/.json" + consultaNs, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
     if (r.status !== 200) throw new Error("respuesta " + r.status);
     sessionStorage.removeItem(KP); sessionStorage.removeItem(KC);
     carrito = {}; localStorage.setItem("ks-carrito", "{}"); pintarCarrito();
