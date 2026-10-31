@@ -293,17 +293,19 @@ let firebaseDB = null;
 
 function initFirebase(){
   if (firebase.apps.length === 0) firebase.initializeApp(window.ADMIN_CONFIG.firebase);
+/* KONFIO ZINC · KZ-REDESIGN-010 · QA aislado (FASE 2: conectar ANTES de que el panel cree sus instancias) */
+if (window.__QA_EMU) {
+  try {
+    /* Se crean AQUI las instancias y se conectan al emulador; cuando el panel haga
+       firebase.auth() / firebase.database() recibira estas mismas, ya conectadas. */
+    firebase.auth().useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+    firebase.database().useEmulator("127.0.0.1", 9000);
+    console.log("[QA] emulador conectado ANTES de las instancias del panel · auth 9099 · rtdb 9000");
+  } catch (e) { console.warn("[QA] fase 2: " + e.message); }
+}
   firebaseAuth = firebase.auth();
   firebaseDB = firebase.database();
-/* KONFIO ZINC · KZ-REDESIGN-010 · QA aislado (FASE 2: sobre las instancias REALES de este panel) */
-(function () {
-  try {
-    if (!window.__QA_EMU) return;
-    if (window.firebaseAuth && window.firebaseAuth.useEmulator) window.firebaseAuth.useEmulator("http://127.0.0.1:9099");
-    if (window.firebaseDB && window.firebaseDB.useEmulator) window.firebaseDB.useEmulator("127.0.0.1", 9000);
-    console.log("[QA] emulador conectado sobre las instancias del panel · auth 9099 · rtdb 9000 · ns demo-sec-v5-default-rtdb");
-  } catch (e) { console.warn("[QA] fase 2: " + e.message); }
-})();
+
 }
 
 function admin(){

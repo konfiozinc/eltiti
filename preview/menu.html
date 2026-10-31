@@ -207,7 +207,7 @@ $("#pedir").addEventListener("click", async () => {
       return { base: "http://127.0.0.1:9000", ns: "?ns=demo-sec-v5-default-rtdb" };
     } catch (e) { return null; }
   })();
-  const base = ((__QA_MENU && __QA_MENU.base) || config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com").replace(/[/?].*$/, "");
+  const base = ((__QA_MENU && __QA_MENU.base) || config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com").replace(/\?.*$/, "").replace(/\/$/, "");
   const consultaNs = (__QA_MENU && __QA_MENU.ns) || "";
   if (__QA_MENU) console.log("[QA] menu escribiendo en el EMULADOR · ns demo-sec-v5-default-rtdb");
   const ns = NEGOCIO.ns;
