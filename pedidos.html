@@ -248,16 +248,17 @@ function admin(){
       initFirebase();
       try { this.sonidoActivado = localStorage.getItem(this.claveSonido) === '1'; } catch(e) {}
       firebaseAuth.onAuthStateChanged(async u => {
-        // Las reglas v4 requieren rol activo del negocio, no solo sesión.
+        // Invalidar callbacks anteriores y desconectar cualquier lectura del usuario previo.
+        const secuencia = (this._secuenciaAuth || 0) + 1;
+        this._secuenciaAuth = secuencia;
+        this.limpiarSuscripciones();
         this.usuario = null;
+        this.pedidos = []; this._publicos = {}; this._privados = {}; this.idsVistos = null; this.nuevos = {};
         this.authReady = false;
-        if (!u) {
-          this.authReady = true;
-          this.pedidos = [];
-          return;
-        }
+        if (!u) { this.authReady = true; return; }
         try {
           const snap = await firebaseDB.ref('_admin/' + u.uid).once('value');
+          if (secuencia !== this._secuenciaAuth) return;
           const rol = snap.val();
           const negocio = this.cfg.ruta === 'menu' ? 'titi' : this.cfg.ruta;
           if (!rol || rol.activo !== true || rol.negocio !== negocio) {
@@ -268,10 +269,11 @@ function admin(){
           this.usuario = u;
           this.escuchar();
         } catch (err) {
+          if (secuencia !== this._secuenciaAuth) return;
           this.loginError = 'No se pudo comprobar el permiso de administración.';
           await firebaseAuth.signOut();
         } finally {
-          this.authReady = true;
+          if (secuencia === this._secuenciaAuth) this.authReady = true;
         }
       });
     },
@@ -352,6 +354,20 @@ function admin(){
       }, 15000);
     },
 
+    limpiarSuscripciones(){
+      for (const suscripcion of (this._suscripciones || [])) {
+        suscripcion.ref.off('value', suscripcion.callback);
+      }
+      this._suscripciones = [];
+    },
+
+    observar(path, callback, onError){
+      const referencia = firebaseDB.ref(path);
+      referencia.on('value', callback, onError);
+      if (!this._suscripciones) this._suscripciones = [];
+      this._suscripciones.push({ref: referencia, callback});
+    },
+
     escuchar(){
       // Los pedidos viven en dos nodos: el público (rastreo por código, sin datos
       // del cliente) y el privado (nombre, teléfono, dirección, pago, notas).
@@ -359,12 +375,12 @@ function admin(){
       this._publicos = {};
       this._privados = {};
 
-      firebaseDB.ref(this.cfg.ruta + '/pedidos_privados').on('value', snap => {
+      this.observar(this.cfg.ruta + '/pedidos_privados', snap => {
         this._privados = snap.val() || {};
         this._fusionar();
       }, err => console.warn('[panel] No se pudieron leer los datos del cliente:', err.message));
 
-      firebaseDB.ref(this.cfg.ruta + '/pedidos').on('value', snap => {
+      this.observar(this.cfg.ruta + '/pedidos', snap => {
         this._publicos = snap.val() || {};
         this._fusionar();
       }, err => { this.cargando = false; this.toastMsg('Error al cargar: ' + err.message); });
@@ -471,7 +487,7 @@ function admin(){
         .finally(() => this.loginLoading = false);
     },
 
-    logout(){ firebaseAuth.signOut(); this.pedidos = []; },
+    logout(){ this.limpiarSuscripciones(); this.pedidos = []; this._publicos = {}; this._privados = {}; firebaseAuth.signOut(); },
 
     toastMsg(msg){
       this.toast = msg;
