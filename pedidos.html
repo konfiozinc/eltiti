@@ -231,16 +231,18 @@ function admin(){
     sonidoActivado: false, idsVistos: null, nuevos: {},
     filtros: [
       { key:'todos', label:'Todos' },
+      { key:'cotizacion_pendiente', label:'Cotización pendiente' },
+      { key:'confirmado', label:'Confirmado' },
       { key:'recibido', label:'Recibido' },
       { key:'preparando', label:'Preparando' },
       { key:'en_camino', label:'En camino' },
       { key:'entregado', label:'Entregado' },
       { key:'cancelado', label:'Cancelado' }
     ],
-    estadoLabel: { recibido:'Recibido', preparando:'Preparando', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' },
-    estadoColor: { recibido:'#2563EB', preparando:'#D97706', en_camino:'#7C3AED', entregado:'#16A34A', cancelado:'#DC2626' },
-    siguiente: { recibido:'preparando', preparando:'en_camino', en_camino:'entregado' },
-    siguienteLabel: { recibido:'Preparar', preparando:'En camino', en_camino:'Entregar' },
+    estadoLabel: { cotizacion_pendiente:'Cotización pendiente', confirmado:'Confirmado', recibido:'Recibido', preparando:'Preparando', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' },
+    estadoColor: { cotizacion_pendiente:'#B45309', confirmado:'#166534', recibido:'#2563EB', preparando:'#D97706', en_camino:'#7C3AED', entregado:'#16A34A', cancelado:'#DC2626' },
+    siguiente: { cotizacion_pendiente:'confirmado', confirmado:'preparando', recibido:'preparando', preparando:'en_camino', en_camino:'entregado' },
+    siguienteLabel: { cotizacion_pendiente:'Confirmar importe', confirmado:'Preparar', recibido:'Preparar', preparando:'En camino', en_camino:'Entregar' },
 
     init(){
       initFirebase();
@@ -376,7 +378,8 @@ function admin(){
         ...data[k],
         // `cliente` viene del nodo privado. El respaldo en data[k] cubre los
         // pedidos antiguos que todavía no se han migrado.
-        cliente: (priv[k] && priv[k].cliente) || data[k].cliente || {}
+        cliente: (priv[k] && priv[k].cliente) || data[k].cliente || {},
+        estado: ({COTIZACION_PENDIENTE:'cotizacion_pendiente',CONFIRMADO:'confirmado',PREPARANDO:'preparando',EN_CAMINO:'en_camino',ENTREGADO:'entregado',CANCELADO:'cancelado'})[data[k].estado] || data[k].estado
       }));
       lista.sort((a, b) => (b.fechaCreacion || 0) - (a.fechaCreacion || 0));
 
@@ -414,17 +417,48 @@ function admin(){
       return d.toLocaleString('es-CO', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
     },
 
-    cambiarEstado(p){
-      const sig = this.siguiente[p.estado];
-      if (!sig) return;
-      firebaseDB.ref(this.cfg.ruta + '/pedidos/' + p.id).update({ estado: sig, fechaActualizacion: firebase.database.ServerValue.TIMESTAMP })
-        .catch(e => this.toastMsg('Error: ' + e.message));
+    async guardarEstadoPedido(p, estado, totalConfirmado){
+      const base = this.cfg.ruta;
+      const cambios = {};
+      cambios[base + '/pedidos/' + p.id + '/estado'] = estado;
+      cambios[base + '/pedidos/' + p.id + '/fechaActualizacion'] = firebase.database.ServerValue.TIMESTAMP;
+      if (totalConfirmado !== undefined) cambios[base + '/pedidos/' + p.id + '/total'] = totalConfirmado;
+      const codigo = p.codigoConsulta;
+      if (typeof codigo === 'string' && /^[A-Za-z0-9_-]{6,64}$/.test(codigo)) {
+        const publico = base + '/pedidos_publico/' + codigo;
+        const existe = await firebaseDB.ref(publico).once('value');
+        if (existe.exists()) {
+          cambios[publico + '/estado'] = estado;
+          if (totalConfirmado !== undefined) cambios[publico + '/total'] = totalConfirmado;
+        }
+      }
+      await firebaseDB.ref().update(cambios);
+      this.toastMsg('✓ Estado del pedido actualizado');
     },
 
-    cancelarPedido(p){
+    async cambiarEstado(p){
+      const sig = this.siguiente[p.estado];
+      if (!sig) return;
+      let total;
+      if (p.estado === 'cotizacion_pendiente') {
+        const entrada = prompt('Importe final confirmado en pesos colombianos (COP):');
+        if (entrada === null) return;
+        total = Number(entrada.trim());
+        if (!Number.isSafeInteger(total) || total <= 0) {
+          this.toastMsg('El importe debe ser un número entero mayor que cero.');
+          return;
+        }
+      }
+      const estado = ({confirmado:'CONFIRMADO',preparando:'PREPARANDO',en_camino:'EN_CAMINO',entregado:'ENTREGADO'})[sig];
+      if (!estado) return;
+      try { await this.guardarEstadoPedido(p, estado, total); }
+      catch(e){ this.toastMsg('Error: ' + e.message); }
+    },
+
+    async cancelarPedido(p){
       if (!confirm('¿Cancelar el pedido ' + (p.numeroPedido || '') + '?')) return;
-      firebaseDB.ref(this.cfg.ruta + '/pedidos/' + p.id).update({ estado: 'cancelado', fechaActualizacion: firebase.database.ServerValue.TIMESTAMP })
-        .catch(e => this.toastMsg('Error: ' + e.message));
+      try { await this.guardarEstadoPedido(p, 'CANCELADO'); }
+      catch(e){ this.toastMsg('Error: ' + e.message); }
     },
 
     login(){
