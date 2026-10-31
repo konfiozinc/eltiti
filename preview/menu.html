@@ -79,7 +79,8 @@ article.p.agotado img{filter:grayscale(1);opacity:.55}
 const NEGOCIO = {
   nombre: "El Titi",
   lema: "Comidas rápidas, hechas al momento",
-  carpeta: "../",          // raíz del sitio
+  carpeta: "../",
+  ns: "menu",          // raíz del sitio
   paleta: { fondo: "#121212", tinta: "#F5F5F5", acento: "#D62828", suave: "#2a2a2a" }
 };
 
@@ -184,18 +185,35 @@ function pintarCarrito() {
   $("#pedir").disabled = n === 0;
 }
 
-$("#pedir").addEventListener("click", () => {
-  const tel = (config.whatsapp || config.telefono || "").toString().replace(/[^\d]/g, "");
-  const lineas = Object.entries(carrito).map(([id, cant]) => {
-    const p = productos.find((x) => String(x.id) === String(id));
-    return p ? "• " + cant + "× " + p.nombre + " - " + plato.format((p.precio || 0) * cant) : "";
-  }).filter(Boolean);
-  if (!lineas.length) return;
-  let total = 0;
-  for (const [id, cant] of Object.entries(carrito)) { const p = productos.find((x) => String(x.id) === String(id)); if (p) total += (p.precio || 0) * cant; }
-  const texto = "Hola, soy cliente de " + NEGOCIO.nombre + ". Quiero:\n" + lineas.join("\n") + "\n*Total: " + plato.format(total) + "*";
-  if (!tel) { alert("El número de WhatsApp del negocio no está configurado todavía."); return; }
-  window.open("https://wa.me/57" + tel + "?text=" + encodeURIComponent(texto), "_blank");
+$("#pedir").addEventListener("click", async () => {
+  const btn = $("#pedir");
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = "Registrando pedido…";
+  const KP = "ks-intento", KC = "ks-codigo";
+  let uuid = sessionStorage.getItem(KP);
+  if (!uuid) { uuid = (crypto.randomUUID ? crypto.randomUUID() : "p-" + Date.now() + "-" + Math.random().toString(16).slice(2)); sessionStorage.setItem(KP, uuid); }
+  let codigo = sessionStorage.getItem(KC);
+  if (!codigo) { const a = new Uint8Array(12); crypto.getRandomValues(a); codigo = Array.from(a).map((b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join(""); sessionStorage.setItem(KC, codigo); }
+  const items = Object.entries(carrito).map(([id, cant]) => { const p = productos.find((x) => String(x.id) === String(id)); return p ? { id: p.id, nombre: p.nombre, precio: p.precio || 0, cantidad: cant } : null; }).filter(Boolean);
+  if (!items.length) { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; return; }
+  const base = (config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com").replace(/\/$/, "");
+  const ns = NEGOCIO.ns;
+  const cuerpo = {};
+  cuerpo[ns + "/pedidos/" + uuid] = { codigoConsulta: codigo, estado: "COTIZACION_PENDIENTE", total: 0, fechaCreacion: Date.now(), items };
+  cuerpo[ns + "/pedidos_privados/" + uuid] = { codigoConsulta: codigo, items };
+  cuerpo[ns + "/pedidos_publico/" + codigo] = { estado: "COTIZACION_PENDIENTE", fecha: new Date().toISOString().slice(0, 10), total: 0 };
+  try {
+    const r = await fetch(base + "/.json", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
+    if (r.status !== 200) throw new Error("respuesta " + r.status);
+    sessionStorage.removeItem(KP); sessionStorage.removeItem(KC);
+    carrito = {}; localStorage.setItem("ks-carrito", "{}"); pintarCarrito();
+    const tel = (config.whatsapp || config.telefono || "").toString().replace(/[^0-9]/g, "");
+    const resumen = items.map((i) => "• " + i.cantidad + "x " + i.nombre).join("\n");
+    alert("Pedido registrado. Tu codigo de consulta es " + codigo + ". El importe queda pendiente de confirmacion.");
+    if (tel) window.open("https://wa.me/57" + tel + "?text=" + encodeURIComponent("Pedido " + codigo + " en " + NEGOCIO.nombre + ":\n" + resumen + "\nImporte pendiente de confirmacion."), "_blank");
+  } catch (e) {
+    alert("No pudimos registrar tu pedido (" + e.message + "). Revisa tu conexion y reintenta: no se cobro nada y tu intento queda guardado.");
+  } finally { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); }
 });
 
 function esc(v) { return String(v == null ? "" : v).replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c])); }
