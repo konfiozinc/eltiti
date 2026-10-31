@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>El Titi — Menú</title>
-<link rel="icon" href="../assets/logo/logo-el-titi.png" />
+
 <style>
 :root{--fondo:#FBF7F0;--tinta:#4A3222;--acento:#E8791A;--suave:#efe6d8;--tarjeta:#1e1e1e;--radio:18px}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--fondo);color:var(--tinta)}
@@ -100,6 +100,8 @@ function pintarPaleta() {
   r.setProperty("--suave", NEGOCIO.paleta.suave);
   $("#marca").textContent = NEGOCIO.nombre;
   $("#lema").textContent = NEGOCIO.lema;
+  /* icono de la pestaña: ruta relativa válida en la raíz y en /preview/ */
+  try { const ic = document.createElement("link"); ic.rel = "icon"; ic.href = NEGOCIO.carpeta + "assets/logo/logo-el-titi.png"; document.head.appendChild(ic); } catch (e) {}
 }
 
 /* Catálogo: (1) Firebase, que es la fuente autorizada por el CTO; (2) la copia local
