@@ -290,19 +290,43 @@ function admin(){
 
     init(){
       initFirebase();
-      firebaseAuth.onAuthStateChanged(u => {
-        this.usuario = u;
-        this.authReady = true;
-        if (u) { this.escuchar(); this.escucharTienda(); }
+      firebaseAuth.onAuthStateChanged(async u => {
+        // Invalidar callbacks anteriores y desconectar cualquier lectura del usuario previo.
+        const secuencia = (this._secuenciaAuth || 0) + 1;
+        this._secuenciaAuth = secuencia;
+        this.limpiarSuscripciones();
+        this.usuario = null;
+        this.productos = [];
+        this.authReady = false;
+        if (!u) { this.authReady = true; return; }
+        try {
+          const snap = await firebaseDB.ref('_admin/' + u.uid).once('value');
+          if (secuencia !== this._secuenciaAuth) return;
+          const rol = snap.val();
+          const negocio = this.cfg.ruta === 'menu' ? 'titi' : this.cfg.ruta;
+          if (!rol || rol.activo !== true || rol.negocio !== negocio) {
+            this.loginError = 'Esta cuenta no tiene permiso activo para administrar ' + this.cfg.nombre + '.';
+            await firebaseAuth.signOut();
+            return;
+          }
+          this.usuario = u;
+          this.escuchar(); this.escucharTienda();
+        } catch (err) {
+          if (secuencia !== this._secuenciaAuth) return;
+          this.loginError = 'No se pudo comprobar el permiso de administración.';
+          await firebaseAuth.signOut();
+        } finally {
+          if (secuencia === this._secuenciaAuth) this.authReady = true;
+        }
       });
     },
 
     escucharTienda(){
-      firebaseDB.ref(this.cfg.ruta + '/meta/tiendaAbierta').on('value', snap => {
+      this.observar(this.cfg.ruta + '/meta/tiendaAbierta', snap => {
         const v = snap.val();
         this.tiendaAbierta = (v === null || v === undefined) ? true : !!v;
       });
-      firebaseDB.ref(this.cfg.ruta + '/meta/mensajeCierre').on('value', snap => {
+      this.observar(this.cfg.ruta + '/meta/mensajeCierre', snap => {
         const m = snap.val();
         if (typeof m === 'string' && m.trim()) this.mensajeCierre = m.trim();
       });
@@ -317,8 +341,22 @@ function admin(){
         .catch(e => this.toastMsg('Error: ' + e.message));
     },
 
+    limpiarSuscripciones(){
+      for (const suscripcion of (this._suscripciones || [])) {
+        suscripcion.ref.off('value', suscripcion.callback);
+      }
+      this._suscripciones = [];
+    },
+
+    observar(path, callback, onError){
+      const referencia = firebaseDB.ref(path);
+      referencia.on('value', callback, onError);
+      if (!this._suscripciones) this._suscripciones = [];
+      this._suscripciones.push({ref: referencia, callback});
+    },
+
     escuchar(){
-      firebaseDB.ref(this.cfg.ruta + '/productos').on('value', snap => {
+      this.observar(this.cfg.ruta + '/productos', snap => {
         const data = snap.val() || {};
         const lista = Object.keys(data).filter(k => data[k]).map(k => ({ id: k, ...data[k] }));
         this.productos = JSON.parse(JSON.stringify(lista));
@@ -347,7 +385,7 @@ function admin(){
         .finally(() => this.loginLoading = false);
     },
 
-    logout(){ firebaseAuth.signOut(); this.productos = []; },
+    logout(){ this.limpiarSuscripciones(); this.productos = []; firebaseAuth.signOut(); },
 
     nuevo(){
       this.editandoId = null;
@@ -363,13 +401,23 @@ function admin(){
 
     guardar(){
       if (!this.form.nombre.trim()) { this.toastMsg('El nombre es obligatorio'); return; }
+      const precio = Number(this.form.precio);
+      const tiempo = Number(this.form.tiempo);
+      if (!Number.isSafeInteger(precio) || precio <= 0) {
+        this.toastMsg('Ingresa un precio válido, entero y mayor que cero.');
+        return;
+      }
+      if (!Number.isSafeInteger(tiempo) || tiempo < 0) {
+        this.toastMsg('El tiempo debe ser un número entero no negativo.');
+        return;
+      }
       this.guardando = true;
       const datos = {
         nombre: this.form.nombre.trim(),
         categoria: this.form.categoria,
-        precio: Number(this.form.precio) || 0,
+        precio,
         descripcion: this.form.descripcion.trim(),
-        tiempo: Number(this.form.tiempo) || 0,
+        tiempo,
         imagen: this.form.imagen,
         destacado: !!this.form.destacado,
         agotado: !this.form.disponible,
