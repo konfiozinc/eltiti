@@ -142,6 +142,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
         <input type="password" x-model="password" placeholder="••••••••" autocomplete="current-password" @keydown.enter="login">
       </div>
       <button class="btn btn-primary btn-block" @click="login" :disabled="loginLoading" x-text="loginLoading ? 'Entrando…' : 'Entrar'"></button>
+      <button class="btn btn-block" x-show="sinPermiso" @click="logout" style="margin-top:10px;background:#4a1414;color:#fff">Cerrar la sesión de esta cuenta</button>
     </div>
   </div>
 </div>
@@ -292,19 +293,25 @@ let firebaseAuth = null;
 let firebaseDB = null;
 
 function initFirebase(){
-  if (firebase.apps.length === 0) firebase.initializeApp(window.ADMIN_CONFIG.firebase);
+  /* Una app de Firebase POR NEGOCIO: cada una guarda su sesión en su propia clave
+     (firebase:authUser:<apiKey>:<nombre>), así El Titi y Col Sabor no comparten sesión
+     aunque vivan en el mismo origen. Los dos paneles del MISMO negocio sí la comparten. */
+  const nombreApp = "kz-panel-" + (window.ADMIN_CONFIG.ruta === "menu" ? "titi" : window.ADMIN_CONFIG.ruta);
+  let app = null;
+  for (let i = 0; i < firebase.apps.length; i++) { if (firebase.apps[i].name === nombreApp) app = firebase.apps[i]; }
+  if (!app) app = firebase.initializeApp(window.ADMIN_CONFIG.firebase, nombreApp);
 /* KONFIO ZINC · KZ-REDESIGN-010 · QA aislado (FASE 2: conectar ANTES de que el panel cree sus instancias) */
 if (window.__QA_EMU) {
   try {
     /* Se crean AQUI las instancias y se conectan al emulador; cuando el panel haga
        firebase.auth() / firebase.database() recibira estas mismas, ya conectadas. */
-    firebase.auth().useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
-    firebase.database().useEmulator("127.0.0.1", 9000);
+    firebase.auth(app).useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+    firebase.database(app).useEmulator("127.0.0.1", 9000);
     console.log("[QA] emulador conectado ANTES de las instancias del panel · auth 9099 · rtdb 9000");
   } catch (e) { console.warn("[QA] fase 2: " + e.message); }
 }
-  firebaseAuth = firebase.auth();
-  firebaseDB = firebase.database();
+  firebaseAuth = firebase.auth(app);
+  firebaseDB = firebase.database(app);
 
 }
 
@@ -314,7 +321,7 @@ function admin(){
     usuario: null,
     authReady: false,
     email: '', password: '',
-    loginError: '', loginLoading: false,
+    loginError: '', loginLoading: false, sinPermiso: false,
     productos: [], busqueda: '', filtro: '',
     cargando: true,
     modal: false, editandoId: null, guardando: false, subiendo: false,
@@ -333,23 +340,26 @@ function admin(){
         this.usuario = null;
         this.productos = [];
         this.authReady = false;
-        if (!u) { this.authReady = true; return; }
+        if (!u) { this.sinPermiso = false; this.authReady = true; return; }
         try {
           const snap = await firebaseDB.ref('_admin/' + u.uid).once('value');
           if (secuencia !== this._secuenciaAuth) return;
           const rol = snap.val();
           const negocio = this.cfg.ruta === 'menu' ? 'titi' : this.cfg.ruta;
           if (!rol || rol.activo !== true || rol.negocio !== negocio) {
+            /* Rechazo estricto del rol SIN cerrar la sesión: el panel queda bloqueado,
+               pero no se destruye la sesión y se puede entrar con otra cuenta. */
+            this.sinPermiso = true;
             this.loginError = 'Esta cuenta no tiene permiso activo para administrar ' + this.cfg.nombre + '.';
-            await firebaseAuth.signOut();
             return;
           }
+          this.sinPermiso = false;
           this.usuario = u;
           this.escuchar(); this.escucharTienda();
         } catch (err) {
           if (secuencia !== this._secuenciaAuth) return;
           this.loginError = 'No se pudo comprobar el permiso de administración.';
-          await firebaseAuth.signOut();
+          /* Antes se cerraba sesión aquí: cualquier fallo de red expulsaba al administrador. */
         } finally {
           if (secuencia === this._secuenciaAuth) this.authReady = true;
         }
@@ -420,7 +430,7 @@ function admin(){
         .finally(() => this.loginLoading = false);
     },
 
-    logout(){ this.limpiarSuscripciones(); this.productos = []; firebaseAuth.signOut(); },
+    logout(){ this.limpiarSuscripciones(); this.productos = []; this.sinPermiso = false; this.loginError = ''; firebaseAuth.signOut(); },
 
     nuevo(){
       this.editandoId = null;
