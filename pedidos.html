@@ -200,6 +200,30 @@ input,select,textarea{font-family:inherit;font-size:15px}
 
 <script src="admin-config.js"></script>
 <script>
+/* KONFIO ZINC · KZ-REDESIGN-010 · QA aislado (FASE 1: antes de crear la app).
+   Doble guarda: host local Y ?emulador=1. En produccion no hace nada.
+   Reescribe la config ANTES de initializeApp para que la UNICA app apunte al proyecto ficticio. */
+(function () {
+  try {
+    var host = location.hostname;
+    var esLocal = host === "localhost" || host === "127.0.0.1";
+    var quiere = new URLSearchParams(location.search).get("emulador") === "1";
+    if (!quiere) return;
+    if (!esLocal) { console.warn("[QA] modo emulador RECHAZADO fuera de localhost/127.0.0.1 (host: " + host + ")"); return; }
+    window.__QA_EMU = true;
+    window.ADMIN_CONFIG = window.ADMIN_CONFIG || {};
+    window.ADMIN_CONFIG.firebase = {
+      apiKey: "clave-ficticia",
+      authDomain: "demo-sec-v5.firebaseapp.com",
+      databaseURL: "http://127.0.0.1:9000?ns=demo-sec-v5-default-rtdb",
+      projectId: "demo-sec-v5",
+      appId: "demo-ficticio"
+    };
+    console.log("[QA] config reescrita al proyecto ficticio demo-sec-v5 ANTES de initializeApp");
+  } catch (e) { console.warn("[QA] fase 1: " + e.message); }
+})();
+</script>
+<script>
 // ⚠️ Instancias de Firebase FUERA del estado reactivo de Alpine
 // (Alpine envuelve en Proxy y rompe los métodos internos de Firebase).
 let firebaseAuth = null;
@@ -220,6 +244,15 @@ function initFirebase(){
   if (firebase.apps.length === 0) firebase.initializeApp(window.ADMIN_CONFIG.firebase);
   firebaseAuth = firebase.auth();
   firebaseDB = firebase.database();
+/* KONFIO ZINC · KZ-REDESIGN-010 · QA aislado (FASE 2: sobre las instancias REALES de este panel) */
+(function () {
+  try {
+    if (!window.__QA_EMU) return;
+    if (window.firebaseAuth && window.firebaseAuth.useEmulator) window.firebaseAuth.useEmulator("http://127.0.0.1:9099");
+    if (window.firebaseDB && window.firebaseDB.useEmulator) window.firebaseDB.useEmulator("127.0.0.1", 9000);
+    console.log("[QA] emulador conectado sobre las instancias del panel · auth 9099 · rtdb 9000 · ns demo-sec-v5-default-rtdb");
+  } catch (e) { console.warn("[QA] fase 2: " + e.message); }
+})();
 }
 
 function admin(){
@@ -498,38 +531,5 @@ function admin(){
 }
 </script>
 
-<script>
-/* KONFIO ZINC · KZ-REDESIGN-010 · QA aislado.
-   Doble guarda: (1) el host debe ser localhost/127.0.0.1, (2) hay que pedir ?emulador=1.
-   En GitHub Pages u otro dominio de produccion este bloque NO hace nada, y si alguien
-   fuerza el parametro ahi, se aborta explicitamente. El proyecto es siempre el ficticio. */
-(function () {
-  try {
-    var host = location.hostname;
-    var esLocal = host === "localhost" || host === "127.0.0.1";
-    var quiere = new URLSearchParams(location.search).get("emulador") === "1";
-    if (!quiere) return;
-    if (!esLocal) {
-      console.warn("[QA] modo emulador RECHAZADO: solo se permite desde localhost o 127.0.0.1 (host actual: " + host + ")");
-      return;
-    }
-    if (typeof firebase === "undefined" || !firebase.initializeApp) { console.warn("[QA] Firebase SDK no disponible"); return; }
-    var ficticio = {
-      apiKey: "clave-ficticia",
-      authDomain: "demo-sec-v5.firebaseapp.com",
-      databaseURL: "http://127.0.0.1:9000?ns=demo-sec-v5-default-rtdb",
-      projectId: "demo-sec-v5",
-      appId: "demo-ficticio"
-    };
-    try { firebase.app().delete(); } catch (e) { /* no habia app previa */ }
-    firebase.initializeApp(ficticio);
-    if (firebase.auth) { try { firebase.auth().useEmulator("http://127.0.0.1:9099"); } catch (e) { console.warn("[QA] auth emu: " + e.message); } }
-    if (firebase.database) { try { firebase.database().useEmulator("127.0.0.1", 9000); } catch (e) { console.warn("[QA] db emu: " + e.message); } }
-    console.log("[QA] EMULADOR ACTIVO · proyecto ficticio demo-sec-v5 · auth 9099 · rtdb 9000");
-  } catch (e) {
-    console.warn("[QA] no se pudo activar el emulador: " + e.message);
-  }
-})();
-</script>
 </body>
 </html>
