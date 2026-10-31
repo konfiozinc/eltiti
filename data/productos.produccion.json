@@ -1,13 +1,24 @@
 {
-  "_origen": "Firebase RTDB · menu/productos (proyecto el-titi-menu) · lectura 2026-11-02",
-  "_nota": "Identificadores originales conservados. Sin cambios de nombre, precio, categoria ni imagen.",
+  "_origen": "Firebase RTDB · menu/productos · lectura 2026-11-02 tras aprobacion del CTO",
+  "_nota": "Identificadores originales. Incluye los cinco productos aprobados: hb-doble=Hamburguesa de la Casa, hb-x=Especial, Salchipapa XXX, Picada, Gaseosa Pool 1.5 lt (Bebidas).",
   "productos": [
     {
       "id": "hb-x",
-      "nombre": "Hamburguesa Doble",
+      "nombre": "Especial",
       "categoria": "Hamburguesas",
       "precio": 18000,
       "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065195/l8kywam0md5mq3q5qr7o.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 20,
+      "destacado": true
+    },
+    {
+      "id": "hb-doble",
+      "nombre": "Hamburguesa de la Casa",
+      "categoria": "Hamburguesas",
+      "precio": 10000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065051/ryriofnggdj9rmvof67m.jpg",
       "etiquetas": [],
       "agotado": false,
       "tiempo": 20,
@@ -33,17 +44,6 @@
       "etiquetas": [],
       "agotado": false,
       "tiempo": null,
-      "destacado": true
-    },
-    {
-      "id": "hb-doble",
-      "nombre": "Hamburguesas",
-      "categoria": "Hamburguesas",
-      "precio": 10000,
-      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065051/ryriofnggdj9rmvof67m.jpg",
-      "etiquetas": [],
-      "agotado": false,
-      "tiempo": 20,
       "destacado": true
     },
     {
@@ -157,6 +157,17 @@
       "destacado": true
     },
     {
+      "id": "-P32rCi0W-_ysRXAykNF",
+      "nombre": "Gaseosa Pool 1.5 lt",
+      "categoria": "Bebidas",
+      "precio": 4000,
+      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791066229/nmw3z7jf2228tvq9efhe.jpg",
+      "etiquetas": [],
+      "agotado": false,
+      "tiempo": 0,
+      "destacado": true
+    },
+    {
       "id": "butifarra",
       "nombre": "Butifarra",
       "categoria": "Adicionales",
@@ -166,17 +177,6 @@
       "agotado": false,
       "tiempo": 10,
       "destacado": false
-    },
-    {
-      "id": "-P32rCi0W-_ysRXAykNF",
-      "nombre": "Gaseosa Pool 1.5 lt",
-      "categoria": "Adicionales",
-      "precio": 4000,
-      "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791066229/nmw3z7jf2228tvq9efhe.jpg",
-      "etiquetas": [],
-      "agotado": false,
-      "tiempo": 0,
-      "destacado": true
     }
   ]
 }
