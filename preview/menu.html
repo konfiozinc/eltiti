@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
@@ -81,7 +81,16 @@ const NEGOCIO = {
   lema: "Comidas rápidas, hechas al momento",
   carpeta: "../",
   ns: "menu",          // raíz del sitio
-  paleta: { fondo: "#121212", tinta: "#F5F5F5", acento: "#D62828", suave: "#2a2a2a" }
+  paleta: { fondo: "#121212", tinta: "#F5F5F5", acento: "#D62828", suave: "#2a2a2a" },
+  /* Productos que NO se publican hasta que el CTO confirme nombre o precio.
+     Siguen intactos en Firebase: aquí sólo se excluyen de la vista pública. */
+  pendientesAprobacion: [
+    "-P32oJslKTLLahoiqsfZ", // Salchipapa XXX · $22.000
+    "-P32q0rM6C9-J2FmpX-7", // Picada · $35.000
+    "-P32rCi0W-_ysRXAykNF", // Gaseosa Pool 1.5 lt · $4.000
+    "hb-doble",             // nombre cargado = "Hamburguesas" (es la categoría)
+    "hb-x"                  // nombre cargado = "Hamburguesa Doble" (duplica hb-doble)
+  ]
 };
 
 const $ = (s) => document.querySelector(s);
@@ -98,16 +107,53 @@ function pintarPaleta() {
   $("#lema").textContent = NEGOCIO.lema;
 }
 
+/* Catálogo: (1) Firebase, que es la fuente autorizada por el CTO; (2) la copia local
+   verificada, si Firebase no responde. Los dos traen los identificadores originales:
+   nunca se sustituyen productos reales por registros seed-*. */
+function qaMenu() {
+  try {
+    const host = location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1") return null;
+    if (new URLSearchParams(location.search).get("emulador") !== "1") return null;
+    return { base: "http://127.0.0.1:9000", ns: "?ns=demo-sec-v5-default-rtdb" };
+  } catch (e) { return null; }
+}
+
+function baseDatos() {
+  const qa = qaMenu();
+  const real = config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com";
+  const base = ((qa && qa.base) || real).replace(/\?.*$/, "").replace(/\/$/, "");
+  return { base: base, consultaNs: (qa && qa.ns) || "" };
+}
+
+async function catalogoRemoto() {
+  const b = baseDatos();
+  const r = await fetch(b.base + "/" + NEGOCIO.ns + "/productos.json" + b.consultaNs, { cache: "no-store" });
+  if (!r.ok) throw new Error("Firebase HTTP " + r.status);
+  const obj = await r.json();
+  if (!obj || typeof obj !== "object") throw new Error("Firebase sin catálogo");
+  return Object.entries(obj).map(([id, v]) => Object.assign({ id: id }, v)).filter((p) => p && p.nombre);
+}
+
+async function catalogoLocal() {
+  const r = await fetch(NEGOCIO.carpeta + "data/productos.produccion.json", { cache: "no-store" });
+  if (!r.ok) throw new Error("copia local HTTP " + r.status);
+  return (await r.json()).productos || [];
+}
+
 async function cargar() {
   try {
-    const [rp, rc] = await Promise.all([
-      fetch(NEGOCIO.carpeta + "data/productos.json", { cache: "no-store" }),
-      fetch(NEGOCIO.carpeta + "data/configuracion.json", { cache: "no-store" }).catch(() => null)
-    ]);
-    if (!rp.ok) throw new Error("No se pudo leer el catálogo (HTTP " + rp.status + ")");
-    productos = (await rp.json()).productos || [];
-    if (rc && rc.ok) { try { config = await rc.json(); } catch (e) { config = {}; } }
+    const rc = fetch(NEGOCIO.carpeta + "data/configuracion.json", { cache: "no-store" }).catch(() => null);
+    let lista = null, origen = "";
+    try { lista = await catalogoRemoto(); origen = "Firebase"; }
+    catch (e) { console.warn("[menú] catálogo remoto no disponible: " + e.message); }
+    if (!lista || !lista.length) { lista = await catalogoLocal(); origen = "copia local verificada"; }
+    const ocultos = new Set((NEGOCIO.pendientesAprobacion || []).map(String));
+    productos = lista.filter((p) => p && !ocultos.has(String(p.id)));
+    const res = await rc;
+    if (res && res.ok) { try { config = await res.json(); } catch (e) { config = {}; } }
     if (!productos.length) throw new Error("El catálogo llegó vacío");
+    console.info("[menú] " + productos.length + " productos desde " + origen);
     pintar();
   } catch (e) {
     $("#lista").innerHTML = '<p class="cargando">No pudimos cargar el menú. Revisa tu conexión y vuelve a intentarlo.</p>';
@@ -117,8 +163,9 @@ async function cargar() {
 }
 
 function categorias() {
-  const orden = [...new Set(productos.map((p) => p.categoria).filter(Boolean))];
-  return orden;
+  const presentes = [...new Set(productos.map((p) => p.categoria).filter(Boolean))];
+  const orden = (config.categorias || []).filter((c) => presentes.includes(c));
+  return orden.concat(presentes.filter((c) => !orden.includes(c)));
 }
 
 function pintar() {
@@ -140,10 +187,16 @@ function pintar() {
   pintarCarrito();
 }
 
+/* La imagen puede ser una URL absoluta (Cloudinary) o una ruta del repo
+   (assets/productos/…): las dos se usan tal cual, sin prefijar la absoluta. */
+function urlImagen(p) {
+  const v = String((p && p.imagen) || "");
+  return /^https?:\/\//i.test(v) ? v : NEGOCIO.carpeta + v.replace(/^\.?\//, "");
+}
+
 function tarjeta(p) {
   const agotado = p.agotado === true;
-  /* el JSON ya trae la ruta completa (assets/productos/…): se usa tal cual */
-  const img = NEGOCIO.carpeta + String(p.imagen || "").replace(/^\.?\//, "");
+  const img = urlImagen(p);
   return '<article class="p' + (agotado ? " agotado" : "") + '">' +
     '<img src="' + img + '" alt="' + esc(p.nombre) + '" loading="lazy" onerror="this.src=\'' + NEGOCIO.carpeta + 'assets/logo/no-image.png\'">' +
     '<div class="cuerpo"><h3>' + esc(p.nombre) + (agotado ? ' <span class="sello">Agotado</span>' : "") + "</h3>" +
@@ -155,7 +208,7 @@ function tarjeta(p) {
 function abrir(id) {
   const p = productos.find((x) => String(x.id) === String(id));
   if (!p) return;
-  $("#mImg").src = NEGOCIO.carpeta + String(p.imagen || "").replace(/^\.?\//, "");
+  $("#mImg").src = urlImagen(p);
   $("#mTitulo").textContent = p.nombre;
   $("#mDesc").textContent = (p.etiquetas || []).join(" · ") || (p.tiempo ? "Listo en " + p.tiempo : "");
   $("#mPrecio").textContent = plato.format(p.precio || 0) + (p.agotado ? " · Agotado" : "");
@@ -198,18 +251,11 @@ $("#pedir").addEventListener("click", async () => {
   if (!items.length) { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; return; }
   /* QA aislado: solo localhost/127.0.0.1 + ?emulador=1. En cualquier otro caso se usa la
      configuracion real del negocio. Doble guarda: el host se comprueba primero. */
-  const __QA_MENU = (function () {
-    try {
-      const host = location.hostname;
-      const esLocal = host === "localhost" || host === "127.0.0.1";
-      if (!esLocal) return null;
-      if (new URLSearchParams(location.search).get("emulador") !== "1") return null;
-      return { base: "http://127.0.0.1:9000", ns: "?ns=demo-sec-v5-default-rtdb" };
-    } catch (e) { return null; }
-  })();
-  const base = ((__QA_MENU && __QA_MENU.base) || config.databaseURL || "https://el-titi-menu-default-rtdb.firebaseio.com").replace(/\?.*$/, "").replace(/\/$/, "");
-  const consultaNs = (__QA_MENU && __QA_MENU.ns) || "";
-  if (__QA_MENU) console.log("[QA] menu escribiendo en el EMULADOR · ns demo-sec-v5-default-rtdb");
+  const qa = qaMenu();
+  const b = baseDatos();
+  const base = b.base;
+  const consultaNs = b.consultaNs;
+  if (qa) console.log("[QA] menu escribiendo en el EMULADOR · ns demo-sec-v5-default-rtdb");
   const ns = NEGOCIO.ns;
   const cuerpo = {};
   cuerpo[ns + "/pedidos/" + uuid] = { codigoConsulta: codigo, estado: "COTIZACION_PENDIENTE", total: 0, fechaCreacion: Date.now(), items };
