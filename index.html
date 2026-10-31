@@ -76,6 +76,9 @@ button{font-family:inherit}
 .agregar{min-height:44px;min-width:44px;padding:0 16px;border:0;border-radius:12px;background:var(--acento);color:#fff;font-weight:800;font-size:.95rem;cursor:pointer;transition:filter .15s}
 .agregar:hover{filter:brightness(1.1)}
 .agregar:disabled{background:var(--borde);color:var(--tinta2);cursor:not-allowed}
+.linea.agotado{opacity:.62}
+.linea.agotado .n{text-decoration:line-through}
+.aviso.promocion{background:rgba(255,195,0,.12);border-color:var(--acento2);color:var(--acento2)}
 .cargando{padding:70px 0;text-align:center;color:var(--tinta2)}
 .aviso{margin:22px 0;padding:16px 18px;border-radius:16px;background:#3a1f12;border:1px solid var(--acento2);color:#FFD76A}
 .pie{border-top:1px solid var(--borde);padding:26px 0 calc(120px + env(safe-area-inset-bottom));color:var(--tinta2);font-size:.86rem;display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between}
@@ -226,39 +229,114 @@ function baseDatos() {
   return { base: base, consultaNs: (qa && qa.ns) || "" };
 }
 
+/* ---- catálogo: Firebase Realtime Database es la fuente oficial ---- */
+let suscripcion = null, sondeo = null, conexion = true, ultimaFirma = null;
+
 async function catalogoRemoto() {
   const b = baseDatos();
   const r = await fetch(b.base + "/" + NEGOCIO.ns + "/productos.json" + b.consultaNs, { cache: "no-store" });
   if (!r.ok) throw new Error("Firebase HTTP " + r.status);
   const obj = await r.json();
-  if (!obj || typeof obj !== "object") throw new Error("Firebase sin catálogo");
+  if (!obj || typeof obj !== "object") return [];
   return Object.entries(obj).map(([id, v]) => Object.assign({ id: id }, v)).filter((p) => p && p.nombre);
 }
-async function catalogoLocal() {
-  const r = await fetch(NEGOCIO.carpeta + "data/productos.produccion.json", { cache: "no-store" });
-  if (!r.ok) throw new Error("copia local HTTP " + r.status);
-  return (await r.json()).productos || [];
+
+function aplicarCatalogo(lista) {
+  const ocultos = new Set((NEGOCIO.pendientesAprobacion || []).map(String));
+  productos = (lista || []).filter((p) => p && !ocultos.has(String(p.id)));
+  let limpio = false;
+  Object.keys(carrito).forEach((id) => { if (!productos.some((p) => String(p.id) === id)) { delete carrito[id]; limpio = true; } });
+  if (limpio) guardar();
+  pintarPortada();
+  pintar();
+}
+
+function enLinea(ok) {
+  conexion = ok;
+  if (!ok) {
+    $("#aviso").innerHTML = '<div class="aviso">No podemos verificar la disponibilidad del menú en este momento. No mostramos productos para no dar por buenos datos antiguos y no se pueden registrar pedidos hasta recuperar la conexión.</div>';
+    $("#lista").innerHTML = '<p class="cargando">Sin conexión con el menú. Reintentando…</p>';
+    $("#cats").innerHTML = "";
+  } else {
+    $("#aviso").innerHTML = config.promocion ? '<div class="aviso promocion">' + esc(config.promocion) + "</div>" : "";
+  }
+  if ($("#pedir")) pintarCarrito();
+}
+
+function cerrarSuscripcion() {
+  if (suscripcion) { try { suscripcion.close(); } catch (e) {} suscripcion = null; }
+}
+
+function iniciarSondeo() {
+  if (sondeo) return;
+  const cada = qaMenu() ? 1200 : 15000;
+  sondeo = setInterval(async () => {
+    try { aplicarCatalogo(await catalogoRemoto()); enLinea(true); }
+    catch (e) { enLinea(false); }
+  }, cada);
+}
+
+/* Actualización en vivo: el administrador cambia algo en el panel y el menú se refresca solo. */
+function suscribir() {
+  cerrarSuscripcion();
+  const b = baseDatos();
+  const url = b.base + "/" + NEGOCIO.ns + "/productos.json" + b.consultaNs;
+  if (typeof EventSource === "undefined") { iniciarSondeo(); return; }
+  let es;
+  try { es = new EventSource(url); } catch (e) { iniciarSondeo(); return; }
+  suscripcion = es;
+  const refrescar = (() => { let t = null; return () => { clearTimeout(t); t = setTimeout(async () => { try { aplicarCatalogo(await catalogoRemoto()); enLinea(true); } catch (e) { enLinea(false); } }, 220); }; })();
+  es.addEventListener("put", (ev) => {
+    try {
+      const d = JSON.parse(ev.data);
+      const obj = (d && d.data) || {};
+      const firma = JSON.stringify(obj);
+      if (firma === ultimaFirma) return;
+      ultimaFirma = firma;
+      const lista = Object.entries(obj).map(([id, v]) => Object.assign({ id: id }, v)).filter((p) => p && p.nombre);
+      enLinea(true);
+      aplicarCatalogo(lista);
+    } catch (err) { refrescar(); }
+  });
+  es.addEventListener("patch", refrescar);
+  es.addEventListener("cancel", () => { enLinea(false); iniciarSondeo(); });
+  es.onerror = () => { if (es.readyState === 2) { enLinea(false); iniciarSondeo(); } };
+}
+
+/* Verificación obligatoria antes de registrar el pedido. */
+async function verificarAntesDePedir(items) {
+  const fresca = await catalogoRemoto();
+  const mapa = new Map(fresca.map((p) => [String(p.id), p]));
+  const bloqueos = [], validos = [];
+  items.forEach((it) => {
+    const p = mapa.get(String(it.id));
+    if (!p) bloqueos.push("«" + it.nombre + "» ya no está en el menú");
+    else if (p.agotado === true) bloqueos.push("«" + p.nombre + "» está agotado");
+    else validos.push({ id: p.id, nombre: p.nombre, precio: p.precio || 0, cantidad: it.cantidad });
+  });
+  return { bloqueos: bloqueos, items: validos, catalogo: fresca };
 }
 
 async function cargar() {
   try {
     const rc = fetch(NEGOCIO.carpeta + "data/configuracion.json", { cache: "no-store" }).catch(() => null);
-    let lista = null, origen = "";
-    try { lista = await catalogoRemoto(); origen = "Firebase"; }
-    catch (e) { console.warn("[menú] catálogo remoto no disponible: " + e.message); }
-    if (!lista || !lista.length) { lista = await catalogoLocal(); origen = "copia local verificada"; }
-    const ocultos = new Set((NEGOCIO.pendientesAprobacion || []).map(String));
-    productos = lista.filter((p) => p && !ocultos.has(String(p.id)));
+    const lista = await catalogoRemoto();
     const res = await rc;
     if (res && res.ok) { try { config = await res.json(); } catch (e) { config = {}; } }
-    if (!productos.length) throw new Error("El catálogo llegó vacío");
-    console.info("[menú] " + productos.length + " productos desde " + origen);
-    pintarPortada();
-    pintar();
+    ultimaFirma = null;
+    enLinea(true);
+    aplicarCatalogo(lista);
+    if (!productos.length) {
+      $("#lista").innerHTML = '<p class="cargando">El menú está vacío en este momento.</p>';
+    }
+    console.info("[menú] " + productos.length + " productos desde Firebase");
+    suscribir();
   } catch (e) {
-    $("#lista").innerHTML = '<p class="cargando">No pudimos cargar el menú. Revisa tu conexión y vuelve a intentarlo.</p>';
-    $("#aviso").innerHTML = '<div class="aviso">El menú no está disponible en este momento. Si ya tienes un pedido, escríbenos por WhatsApp.</div>';
-    console.warn("[menú] " + e.message);
+    console.warn("[menú] no se pudo leer Firebase: " + e.message);
+    productos = [];
+    enLinea(false);
+    pintarPortada();
+    iniciarSondeo();
   }
 }
 
@@ -352,12 +430,14 @@ function pintarCarrito() {
   const ls = lineasCarrito();
   const total = ls.reduce((s, l) => s + (l.p.precio || 0) * l.cant, 0);
   const n = ls.reduce((s, l) => s + l.cant, 0);
+  const conAgotado = ls.some((l) => l.p.agotado === true);
   $("#lineas").innerHTML = ls.length ? ls.map((l) =>
-    '<div class="linea"><img src="' + urlImagen(l.p) + '" alt="">' +
-    '<div><div class="n">' + esc(l.p.nombre) + '</div><div class="p">' + plato.format(l.p.precio || 0) + " c/u</div>" +
+    '<div class="linea' + (l.p.agotado ? " agotado" : "") + '"><img src="' + urlImagen(l.p) + '" alt="">' +
+    '<div><div class="n">' + esc(l.p.nombre) + (l.p.agotado ? ' <span class="sello">Agotado</span>' : "") +
+    '</div><div class="p">' + plato.format(l.p.precio || 0) + " c/u</div>" +
     '<div class="ctrl"><button data-menos="' + esc(l.p.id) + '" aria-label="Quitar uno de ' + esc(l.p.nombre) + '">−</button>' +
     '<span class="cant">' + l.cant + '</span>' +
-    '<button data-mas="' + esc(l.p.id) + '" aria-label="Agregar uno de ' + esc(l.p.nombre) + '">+</button>' +
+    '<button data-mas="' + esc(l.p.id) + '" aria-label="Agregar uno de ' + esc(l.p.nombre) + '"' + (l.p.agotado ? " disabled" : "") + '>+</button>' +
     '<button class="quitar" data-borrar="' + esc(l.p.id) + '">Eliminar</button></div></div></div>').join("")
     : '<p class="vacio">Tu pedido está vacío.<br>Toca «Agregar» en los productos que quieras.</p>';
   $("#lineas").querySelectorAll("[data-mas]").forEach((b) => b.addEventListener("click", () => sumar(b.dataset.mas)));
@@ -366,7 +446,9 @@ function pintarCarrito() {
   $("#tot").textContent = plato.format(total);
   $("#tot-final").textContent = plato.format(total);
   $("#cuenta").textContent = n;
-  $("#pedir").disabled = n === 0;
+  const bloqueado = n === 0 || conAgotado || !conexion;
+  $("#pedir").disabled = bloqueado;
+  $("#pedir").textContent = (!conexion && n > 0) ? "Sin conexión" : (conAgotado && n > 0) ? "Revisa tu pedido" : "Pedir por WhatsApp";
 }
 
 function abrirPanel() { $("#panel").classList.add("on"); $("#velo").classList.add("on"); $("#panel").setAttribute("aria-hidden", "false"); }
@@ -386,8 +468,21 @@ $("#pedir").addEventListener("click", async () => {
   if (!uuid) { uuid = (crypto.randomUUID ? crypto.randomUUID() : "p-" + Date.now() + "-" + Math.random().toString(16).slice(2)); sessionStorage.setItem(KP, uuid); }
   let codigo = sessionStorage.getItem(KC);
   if (!codigo) { const a = new Uint8Array(12); crypto.getRandomValues(a); codigo = Array.from(a).map((b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join(""); sessionStorage.setItem(KC, codigo); }
-  const items = Object.entries(carrito).map(([id, cant]) => { const p = productos.find((x) => String(x.id) === String(id)); return p ? { id: p.id, nombre: p.nombre, precio: p.precio || 0, cantidad: cant } : null; }).filter(Boolean);
-  if (!items.length) { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; return; }
+  const enCarrito = Object.entries(carrito).map(([id, cant]) => { const p = productos.find((x) => String(x.id) === String(id)); return p ? { id: p.id, nombre: p.nombre, precio: p.precio || 0, cantidad: cant } : null; }).filter(Boolean);
+  if (!enCarrito.length) { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; return; }
+  /* Antes de registrar: comprobar contra Firebase que todo sigue disponible y al precio actual. */
+  let verificacion = null;
+  try { verificacion = await verificarAntesDePedir(enCarrito); } catch (e) { verificacion = null; }
+  if (!verificacion) {
+    alert("No pudimos verificar la disponibilidad de tu pedido. No se registró nada y no se cobró nada: revisa tu conexión y vuelve a intentarlo.");
+    btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); return;
+  }
+  aplicarCatalogo(verificacion.catalogo);
+  if (verificacion.bloqueos.length) {
+    alert("Tu pedido no se registró porque cambió el menú:\n• " + verificacion.bloqueos.join("\n• ") + "\n\nRevisa tu carrito y vuelve a intentarlo.");
+    btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); return;
+  }
+  const items = verificacion.items;
   const qa = qaMenu();
   const b = baseDatos();
   const base = b.base;
