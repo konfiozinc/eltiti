@@ -291,16 +291,17 @@ function admin(){
     init(){
       initFirebase();
       firebaseAuth.onAuthStateChanged(async u => {
-        // Las reglas v4 requieren rol activo del negocio, no solo sesión.
+        // Invalidar callbacks anteriores y desconectar cualquier lectura del usuario previo.
+        const secuencia = (this._secuenciaAuth || 0) + 1;
+        this._secuenciaAuth = secuencia;
+        this.limpiarSuscripciones();
         this.usuario = null;
+        this.productos = [];
         this.authReady = false;
-        if (!u) {
-          this.authReady = true;
-          this.productos = [];
-          return;
-        }
+        if (!u) { this.authReady = true; return; }
         try {
           const snap = await firebaseDB.ref('_admin/' + u.uid).once('value');
+          if (secuencia !== this._secuenciaAuth) return;
           const rol = snap.val();
           const negocio = this.cfg.ruta === 'menu' ? 'titi' : this.cfg.ruta;
           if (!rol || rol.activo !== true || rol.negocio !== negocio) {
@@ -311,20 +312,21 @@ function admin(){
           this.usuario = u;
           this.escuchar(); this.escucharTienda();
         } catch (err) {
+          if (secuencia !== this._secuenciaAuth) return;
           this.loginError = 'No se pudo comprobar el permiso de administración.';
           await firebaseAuth.signOut();
         } finally {
-          this.authReady = true;
+          if (secuencia === this._secuenciaAuth) this.authReady = true;
         }
       });
     },
 
     escucharTienda(){
-      firebaseDB.ref(this.cfg.ruta + '/meta/tiendaAbierta').on('value', snap => {
+      this.observar(this.cfg.ruta + '/meta/tiendaAbierta', snap => {
         const v = snap.val();
         this.tiendaAbierta = (v === null || v === undefined) ? true : !!v;
       });
-      firebaseDB.ref(this.cfg.ruta + '/meta/mensajeCierre').on('value', snap => {
+      this.observar(this.cfg.ruta + '/meta/mensajeCierre', snap => {
         const m = snap.val();
         if (typeof m === 'string' && m.trim()) this.mensajeCierre = m.trim();
       });
@@ -339,8 +341,22 @@ function admin(){
         .catch(e => this.toastMsg('Error: ' + e.message));
     },
 
+    limpiarSuscripciones(){
+      for (const suscripcion of (this._suscripciones || [])) {
+        suscripcion.ref.off('value', suscripcion.callback);
+      }
+      this._suscripciones = [];
+    },
+
+    observar(path, callback, onError){
+      const referencia = firebaseDB.ref(path);
+      referencia.on('value', callback, onError);
+      if (!this._suscripciones) this._suscripciones = [];
+      this._suscripciones.push({ref: referencia, callback});
+    },
+
     escuchar(){
-      firebaseDB.ref(this.cfg.ruta + '/productos').on('value', snap => {
+      this.observar(this.cfg.ruta + '/productos', snap => {
         const data = snap.val() || {};
         const lista = Object.keys(data).filter(k => data[k]).map(k => ({ id: k, ...data[k] }));
         this.productos = JSON.parse(JSON.stringify(lista));
@@ -369,7 +385,7 @@ function admin(){
         .finally(() => this.loginLoading = false);
     },
 
-    logout(){ firebaseAuth.signOut(); this.productos = []; },
+    logout(){ this.limpiarSuscripciones(); this.productos = []; firebaseAuth.signOut(); },
 
     nuevo(){
       this.editandoId = null;
