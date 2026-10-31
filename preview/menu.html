@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="icon" href="data:," />
 <meta name="theme-color" content="#0E0E10" />
 <title>El Titi · Menú</title>
 <style>
@@ -271,7 +272,7 @@ function pintarPortada() {
   $("#marca").textContent = NEGOCIO.nombre;
   $("#lema").textContent = NEGOCIO.lema;
   $("#logo").src = NEGOCIO.carpeta + NEGOCIO.icono;
-  try { const ic = document.createElement("link"); ic.rel = "icon"; ic.href = NEGOCIO.carpeta + NEGOCIO.icono; document.head.appendChild(ic); } catch (e) {}
+  try { const prev = document.querySelector('link[rel="icon"]'); if (prev) prev.remove(); const ic = document.createElement("link"); ic.rel = "icon"; ic.href = NEGOCIO.carpeta + NEGOCIO.icono; document.head.appendChild(ic); } catch (e) {}
   const destacado = productos.find((p) => p.destacado === true && p.imagen) || productos.find((p) => p.imagen);
   if (destacado) $("#fondo-foto").style.backgroundImage = 'url("' + urlImagen(destacado) + '")';
   const chips = [];
