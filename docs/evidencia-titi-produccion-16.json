@@ -1,0 +1,152 @@
+{
+  "-P32oJslKTLLahoiqsfZ": {
+    "agotado": false,
+    "categoria": "Salchipapas",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065545/vjz3fu8j1ge5d4jkgpyw.jpg",
+    "nombre": "Salchipapa XXX",
+    "precio": 22000,
+    "tiempo": 20
+  },
+  "-P32q0rM6C9-J2FmpX-7": {
+    "agotado": false,
+    "categoria": "Picadas",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791066061/mxiku7m0fhmlazlzrwj8.jpg",
+    "nombre": "Picada",
+    "precio": 35000,
+    "tiempo": 30
+  },
+  "-P32rCi0W-_ysRXAykNF": {
+    "agotado": false,
+    "categoria": "Adicionales",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791066229/nmw3z7jf2228tvq9efhe.jpg",
+    "nombre": "Gaseosa Pool 1.5 lt",
+    "precio": 4000,
+    "tiempo": 0
+  },
+  "butifarra": {
+    "agotado": false,
+    "categoria": "Adicionales",
+    "descripcion": "",
+    "destacado": false,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791009169/yp0rwzx0fgxhizk3pjzp.jpg",
+    "nombre": "Butifarra",
+    "precio": 800,
+    "tiempo": 10
+  },
+  "choripapa": {
+    "agotado": false,
+    "categoria": "Salchipapas",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791009335/zy8rhgpt7cmlyxt1pdul.jpg",
+    "nombre": "Choripapa",
+    "precio": 12000,
+    "tiempo": 20
+  },
+  "chuzo-cerdo": {
+    "agotado": false,
+    "categoria": "Chuzos",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065752/dzh8kdctjztqsumeoynl.jpg",
+    "nombre": "Chuzo de Cerdo",
+    "precio": 17000,
+    "tiempo": 0
+  },
+  "chuzo-pollo": {
+    "agotado": false,
+    "categoria": "Chuzos",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791009454/fnjysbi2bknj0csltlbb.jpg",
+    "nombre": "Chuzo de Pollo",
+    "precio": 15000,
+    "tiempo": 30
+  },
+  "hb-doble": {
+    "agotado": false,
+    "categoria": "Hamburguesas",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065051/ryriofnggdj9rmvof67m.jpg",
+    "nombre": "Hamburguesas",
+    "precio": 10000,
+    "tiempo": 20
+  },
+  "hb-especial": {
+    "agotado": false,
+    "categoria": "Hamburguesas",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "assets/productos/hamburguesa-especial.webp",
+    "nombre": "Hamburguesa Especial",
+    "precio": 18000,
+    "tiempo": 0
+  },
+  "hb-simple": {
+    "agotado": false,
+    "categoria": "Hamburguesas",
+    "destacado": true,
+    "imagen": "assets/productos/hamburguesa-simple.webp",
+    "nombre": "Hamburguesa Simple",
+    "precio": 8000
+  },
+  "hb-x": {
+    "agotado": false,
+    "categoria": "Hamburguesas",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065195/l8kywam0md5mq3q5qr7o.jpg",
+    "nombre": "Hamburguesa Doble",
+    "precio": 18000,
+    "tiempo": 20
+  },
+  "sp-doble": {
+    "agotado": false,
+    "categoria": "Salchipapas",
+    "destacado": true,
+    "imagen": "assets/productos/salchipapa-doble.webp",
+    "nombre": "Salchipapa Doble",
+    "precio": 11000
+  },
+  "sp-especial": {
+    "agotado": false,
+    "categoria": "Salchipapas",
+    "destacado": true,
+    "imagen": "assets/productos/salchipapa-especial.webp",
+    "nombre": "Salchipapa Especial",
+    "precio": 8000
+  },
+  "sp-simple": {
+    "agotado": false,
+    "categoria": "Salchipapas",
+    "descripcion": "",
+    "destacado": true,
+    "imagen": "https://res.cloudinary.com/f07x0wga/image/upload/v1791065649/dw7fm4mv3enmb0509bop.jpg",
+    "nombre": "Salchipapa Simple",
+    "precio": 6000,
+    "tiempo": 0
+  },
+  "sp-triple": {
+    "agotado": false,
+    "categoria": "Salchipapas",
+    "destacado": true,
+    "imagen": "assets/productos/salchipapa-triple.webp",
+    "nombre": "Salchipapa Triple",
+    "precio": 14000
+  },
+  "sp-x": {
+    "agotado": false,
+    "categoria": "Salchipapas",
+    "destacado": true,
+    "imagen": "assets/productos/salchipapa-x.webp",
+    "nombre": "Salchipapa X",
+    "precio": 17000
+  }
+}
