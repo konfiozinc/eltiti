@@ -1,0 +1,36 @@
+{
+  "menu/productos": {
+    "registros": 16,
+    "huella": "5321c48bedf3abc0"
+  },
+  "colsabor/productos": {
+    "registros": 29,
+    "huella": "05a36fc1d49b4a5e"
+  },
+  "menu/pedidos": {
+    "registros": 3,
+    "huella": "44e119a4d666625a"
+  },
+  "colsabor/pedidos": {
+    "registros": 10,
+    "huella": "3d33c9fdcb232604"
+  },
+  "menu/pedidos_publico": {
+    "registros": 0,
+    "huella": "74234e98afe7498f"
+  },
+  "colsabor/pedidos_publico": {
+    "registros": 1,
+    "huella": "08699db0ae731f61"
+  },
+  "_admin": {
+    "registros": 4,
+    "huella": "745256b5f79ba631",
+    "roles": [
+      "colsabor:activo",
+      "dta-chanclas:activo",
+      "nbc-company:activo",
+      "titi:activo"
+    ]
+  }
+}
