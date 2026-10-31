@@ -1,0 +1,196 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "_admin": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": false
+      }
+    },
+    "menu": {
+      "productos": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+      },
+      "promo": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+      },
+      "horario": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+      },
+      "meta": {
+        ".read": true,
+        "contadorPedidos": {
+          ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+        },
+        "tiendaAbierta": {
+          ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+          ".validate": "newData.isBoolean()"
+        },
+        "mensajeCierre": {
+          ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+          ".validate": "newData.isString() && newData.val().length <= 300"
+        }
+      },
+      "reseñas": {
+        ".read": true,
+        "$resena": {
+          ".write": "!data.exists() && newData.hasChildren(['texto']) && newData.child('texto').isString() && newData.child('texto').val().length <= 600"
+        }
+      },
+      "pedidos": {
+        ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+        ".indexOn": [
+          "codigoConsulta"
+        ],
+        "$pedido": {
+          ".write": "!data.exists() && newData.hasChildren(['codigoConsulta','estado'])",
+          "estado": {
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+            ".validate": "newData.isString() && (newData.val() == 'COTIZACION_PENDIENTE' || newData.val() == 'CONFIRMADO' || newData.val() == 'PREPARANDO' || newData.val() == 'EN_CAMINO' || newData.val() == 'ENTREGADO' || newData.val() == 'CANCELADO' || newData.val() == 'recibido' || newData.val() == 'preparando' || newData.val() == 'en_camino' || newData.val() == 'entregado' || newData.val() == 'cancelado')"
+          },
+          "total": {
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "fechaActualizacion": {
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
+        }
+      },
+      "pedidos_publico": {
+        "$codigo": {
+          ".read": true,
+          ".write": "!data.exists() && newData.hasChildren(['estado'])",
+          ".validate": "newData.hasChildren(['estado']) && newData.child('estado').isString()",
+          "estado": {
+            ".validate": "newData.isString() && newData.val().length <= 20",
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+          },
+          "fecha": {
+            ".validate": "newData.isString()"
+          },
+          "total": {
+            ".validate": "newData.isNumber()",
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+          }
+        }
+      },
+      "pedidos_privados": {
+        ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+        "$pedido": {
+          ".write": "!data.exists() && newData.hasChildren(['codigoConsulta'])"
+        }
+      }
+    },
+    "colsabor": {
+      "productos": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+      },
+      "promo": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+      },
+      "horario": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+      },
+      "meta": {
+        ".read": true,
+        "contadorPedidos": {
+          ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+        },
+        "tiendaAbierta": {
+          ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+          ".validate": "newData.isBoolean()"
+        },
+        "mensajeCierre": {
+          ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+          ".validate": "newData.isString() && newData.val().length <= 300"
+        }
+      },
+      "reseñas": {
+        ".read": true,
+        "$resena": {
+          ".write": "!data.exists() && newData.hasChildren(['texto']) && newData.child('texto').isString() && newData.child('texto').val().length <= 600"
+        }
+      },
+      "pedidos": {
+        ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+        ".indexOn": [
+          "codigoConsulta"
+        ],
+        "$pedido": {
+          ".write": "!data.exists() && newData.hasChildren(['codigoConsulta','estado'])",
+          "estado": {
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+            ".validate": "newData.isString() && (newData.val() == 'COTIZACION_PENDIENTE' || newData.val() == 'CONFIRMADO' || newData.val() == 'PREPARANDO' || newData.val() == 'EN_CAMINO' || newData.val() == 'ENTREGADO' || newData.val() == 'CANCELADO' || newData.val() == 'recibido' || newData.val() == 'preparando' || newData.val() == 'en_camino' || newData.val() == 'entregado' || newData.val() == 'cancelado')"
+          },
+          "total": {
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "fechaActualizacion": {
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
+        }
+      },
+      "pedidos_publico": {
+        "$codigo": {
+          ".read": true,
+          ".write": "!data.exists() && newData.hasChildren(['estado'])",
+          ".validate": "newData.hasChildren(['estado']) && newData.child('estado').isString()",
+          "estado": {
+            ".validate": "newData.isString() && newData.val().length <= 20",
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+          },
+          "fecha": {
+            ".validate": "newData.isString()"
+          },
+          "total": {
+            ".validate": "newData.isNumber()",
+            ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'"
+          }
+        }
+      },
+      "pedidos_privados": {
+        ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'colsabor'",
+        "$pedido": {
+          ".write": "!data.exists() && newData.hasChildren(['codigoConsulta'])"
+        }
+      }
+    },
+    "menu_backup": {
+      ".read": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'",
+      ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'titi'"
+    },
+    "dta-chanclas": {
+      ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'dta-chanclas'",
+      "productos": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'dta-chanclas'"
+      },
+      "meta": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'dta-chanclas'"
+      }
+    },
+    "nbc-company": {
+      ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'nbc-company'",
+      "productos": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'nbc-company'"
+      },
+      "meta": {
+        ".read": true,
+        ".write": "auth != null && root.child('_admin').child(auth.uid).child('activo').val() == true && root.child('_admin').child(auth.uid).child('negocio').val() == 'nbc-company'"
+      }
+    }
+  }
+}
