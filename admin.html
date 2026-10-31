@@ -290,10 +290,32 @@ function admin(){
 
     init(){
       initFirebase();
-      firebaseAuth.onAuthStateChanged(u => {
-        this.usuario = u;
-        this.authReady = true;
-        if (u) { this.escuchar(); this.escucharTienda(); }
+      firebaseAuth.onAuthStateChanged(async u => {
+        // Las reglas v4 requieren rol activo del negocio, no solo sesión.
+        this.usuario = null;
+        this.authReady = false;
+        if (!u) {
+          this.authReady = true;
+          this.productos = [];
+          return;
+        }
+        try {
+          const snap = await firebaseDB.ref('_admin/' + u.uid).once('value');
+          const rol = snap.val();
+          const negocio = this.cfg.ruta === 'menu' ? 'titi' : this.cfg.ruta;
+          if (!rol || rol.activo !== true || rol.negocio !== negocio) {
+            this.loginError = 'Esta cuenta no tiene permiso activo para administrar ' + this.cfg.nombre + '.';
+            await firebaseAuth.signOut();
+            return;
+          }
+          this.usuario = u;
+          this.escuchar(); this.escucharTienda();
+        } catch (err) {
+          this.loginError = 'No se pudo comprobar el permiso de administración.';
+          await firebaseAuth.signOut();
+        } finally {
+          this.authReady = true;
+        }
       });
     },
 
