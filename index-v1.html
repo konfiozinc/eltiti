@@ -55,7 +55,9 @@
 .btn-pedido:disabled{cursor:not-allowed}
 .btn-enviar-pedido:disabled{opacity:.55;cursor:not-allowed}
 </style>
-
+    <meta property="og:site_name" content="KONFÍO ZINC">
+    <meta property="og:locale" content="es_CO">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
 
@@ -419,7 +421,7 @@
                         <i class="fas fa-camera"></i> Seleccionar imagen
                         <input type="file" accept="image/*" @change="subirFoto($event, 'nuevo')">
                     </label>
-                    <img :src="previewNuevo || newProduct.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                    <img alt="" :src="previewNuevo || newProduct.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
                 </div>
                 <input type="text" x-model="newProduct.imagen" placeholder="assets/productos/nombre-archivo.webp">
                 <p class="img-info-msg">📦 Para agregar nuevas imágenes al catálogo deben subirse al repositorio GitHub dentro de <b>assets/productos</b>. La vista previa es solo temporal en este dispositivo.</p>
@@ -466,7 +468,7 @@
                                 <i class="fas fa-camera"></i> Seleccionar imagen
                                 <input type="file" accept="image/*" @change="subirFoto($event, p)">
                             </label>
-                            <img :src="previewPorId[p.id] || p.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
+                            <img alt="" :src="previewPorId[p.id] || p.imagen || 'assets/logo/no-image.webp'" class="photo-preview" loading="lazy" decoding="async" @error="if (!$event.target.src.includes('no-image.webp')) $event.target.src='assets/logo/no-image.webp'">
                         </div>
                         <div style="display:flex;gap:8px;align-items:center;">
                             <span style="font-size:11px;color:#b0b0b0;white-space:nowrap;">Ruta:</span>
