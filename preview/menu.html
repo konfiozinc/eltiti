@@ -124,6 +124,17 @@ button{font-family:inherit}
 .modal p{margin:0;color:var(--tinta2);line-height:1.5}
 .modal .precio{font-size:1.25rem}
 .cerrar{min-height:50px;border-radius:14px;background:var(--tarjeta);border:1px solid var(--borde);color:var(--tinta);font-weight:800;cursor:pointer}
+
+    /* ---- KZ-MENU-002 ---- */
+    /* Botón «Agregar»: en pantallas angostas no cabía junto al precio y la tarjeta lo recortaba. */
+    .fila{flex-wrap:wrap}
+    .precio{min-width:0}
+    .agregar{flex:0 0 auto;white-space:nowrap;margin-left:auto}
+    @media(max-width:400px){.agregar{padding:0 12px;font-size:.9rem}}
+    /* El logotipo del negocio se muestra entero, sin recortes. */
+    .marca img{object-fit:contain}
+    /* Aviso de pedido/error dentro de la página (sustituye al alert nativo). */
+    .aviso--error{border-width:2px;font-weight:700}
 </style>
     <meta name="description" content="Menu de Eltiti. Tarjeta digital creada por KONFÍO ZINC.">
     <meta property="og:title" content="Menu · Eltiti">
@@ -254,7 +265,8 @@ async function catalogoRemoto() {
 
 function aplicarCatalogo(lista) {
   const ocultos = new Set((NEGOCIO.pendientesAprobacion || []).map(String));
-  productos = (lista || []).filter((p) => p && !ocultos.has(String(p.id)));
+  // Los agotados y los ocultos no entran al catálogo de la vista: si no están, no se pintan.
+  productos = (lista || []).filter((p) => p && p.agotado !== true && !ocultos.has(String(p.id)));
   let limpio = false;
   Object.keys(carrito).forEach((id) => { if (!productos.some((p) => String(p.id) === id)) { delete carrito[id]; limpio = true; } });
   if (limpio) guardar();
@@ -376,13 +388,17 @@ function pintarPortada() {
 }
 
 function categorias() {
-  const presentes = [...new Set(productos.map((p) => p.categoria).filter(Boolean))];
+  // Solo cuentan los productos que se van a ver: así no quedan secciones vacías.
+  const visibles = productos.filter((p) => p.agotado !== true);
+  const presentes = [...new Set(visibles.map((p) => p.categoria).filter(Boolean))];
   const orden = (config.categorias || []).filter((c) => presentes.includes(c));
   return orden.concat(presentes.filter((c) => !orden.includes(c)));
 }
 
 function tarjeta(p) {
-  const agotado = p.agotado === true;
+  // Un producto agotado no se pinta: ni tarjeta gris, ni hueco en la rejilla.
+  if (p.agotado === true) return "";
+  const agotado = false;
   const meta = [(p.etiquetas || []).join(" · "), p.tiempo ? p.tiempo + " min" : ""].filter(Boolean).join(" · ");
   return '<article class="tarjeta' + (agotado ? " agotado" : "") + '">' +
     '<button class="foto" data-ver="' + esc(p.id) + '" aria-label="Ver ' + esc(p.nombre) + '">' +
@@ -399,7 +415,7 @@ function pintar() {
   const cats = categorias();
   $("#cats").innerHTML = cats.map((c, i) => '<button data-cat="' + esc(ancla(c)) + '"' + (i === 0 ? ' class="on"' : "") + ">" + esc(c) + "</button>").join("");
   $("#lista").innerHTML = cats.map((c) => {
-    const items = productos.filter((p) => p.categoria === c);
+    const items = productos.filter((p) => p.categoria === c && p.agotado !== true);
     return '<section class="grupo" id="cat-' + ancla(c) + '"><div class="grupo-cab"><h2>' + esc(c) + "</h2><span>" + items.length + " " + (items.length === 1 ? "producto" : "productos") + '</span></div><div class="grid">' + items.map(tarjeta).join("") + "</div></section>";
   }).join("");
   $("#cats").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
@@ -470,10 +486,59 @@ $("#velo").addEventListener("click", cerrarPanel);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $("#modal").classList.remove("on"); cerrarPanel(); } });
 
 /* ---- registro del pedido: mismo contrato con Firebase ---- */
+/* ---- KZ-MENU-002 · avisos en página y mensaje de pedido ----
+   Antes se usaban los diálogos nativos del navegador —ese cuadro gris que no se puede estilar, que en
+   el móvil tapa la pantalla y que el cliente reportó que seguía apareciendo al pedir—. Ahora el aviso se
+   pinta dentro de la propia página, en la caja #aviso, con los colores de este menú. */
+const miles = (n) => String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+function mostrarAviso(mensaje, tipo) {
+  const caja = $("#aviso");
+  if (!caja) return;
+  const clase = tipo === "error" ? "aviso aviso--error" : "aviso";
+  caja.innerHTML = '<div class="' + clase + '" role="alert">' + esc(mensaje).replace(/\n/g, "<br>") + "</div>";
+  try { caja.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) { /* navegador antiguo */ }
+  clearTimeout(mostrarAviso._t);
+  mostrarAviso._t = setTimeout(() => {
+    if (caja.querySelector(".aviso")) caja.innerHTML = config.promocion ? '<div class="aviso promocion">' + esc(config.promocion) + "</div>" : "";
+  }, 10000);
+}
+
+/* El número de config ya trae el indicativo (573…): solo se añade 57 si viniera sin él. */
+function telInternacional(tel) {
+  const n = String(tel || "").replace(/[^0-9]/g, "");
+  return n.length === 10 ? "57" + n : n;
+}
+
+/* Formato de factura para WhatsApp: detalle con subtotales y total general. */
+function mensajePedido(items, codigo) {
+  const lineas = items.map((i) => "▪️ " + i.cantidad + "x " + i.nombre + " — $" + miles((Number(i.precio) || 0) * i.cantidad));
+  const total = items.reduce((s, i) => s + (Number(i.precio) || 0) * i.cantidad, 0);
+  return [
+    "🛍️ *NUEVO PEDIDO EN " + String(NEGOCIO.nombre || "").toUpperCase() + "*",
+    "📝 Código: *" + codigo + "*",
+    "----------------------------",
+    "*DETALLE DEL PEDIDO:*",
+    ...lineas,
+    "----------------------------",
+    "💵 *TOTAL A PAGAR: $" + miles(total) + "*",
+    "----------------------------",
+    "⚠️ _El valor total y la disponibilidad quedan pendientes de confirmación por parte del negocio._"
+  ].join("\n");
+}
+
+function urlWhatsApp(items, codigo, tel) {
+  return "https://wa.me/" + telInternacional(tel) + "?text=" + encodeURIComponent(mensajePedido(items, codigo));
+}
+
 $("#pedir").addEventListener("click", async () => {
   const btn = $("#pedir");
   if (btn.disabled) return;
   btn.disabled = true; btn.textContent = "Registrando pedido…";
+  /* La pestaña de WhatsApp se reserva AHORA, dentro del clic del usuario: si se abre después de los
+     await, el navegador la bloquea como ventana emergente. */
+  let ventanaWA = null;
+  try { ventanaWA = window.open("", "_blank"); } catch (e) { ventanaWA = null; }
   const KP = "ks-intento", KC = "ks-codigo";
   let uuid = sessionStorage.getItem(KP);
   if (!uuid) { uuid = (crypto.randomUUID ? crypto.randomUUID() : "p-" + Date.now() + "-" + Math.random().toString(16).slice(2)); sessionStorage.setItem(KP, uuid); }
@@ -485,12 +550,12 @@ $("#pedir").addEventListener("click", async () => {
   let verificacion = null;
   try { verificacion = await verificarAntesDePedir(enCarrito); } catch (e) { verificacion = null; }
   if (!verificacion) {
-    alert("No pudimos verificar la disponibilidad de tu pedido. No se registró nada y no se cobró nada: revisa tu conexión y vuelve a intentarlo.");
+    mostrarAviso("No pudimos verificar la disponibilidad de tu pedido. No se registró nada y no se cobró nada: revisa tu conexión y vuelve a intentarlo.", "error");
     btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); return;
   }
   aplicarCatalogo(verificacion.catalogo);
   if (verificacion.bloqueos.length) {
-    alert("Tu pedido no se registró porque cambió el menú:\n• " + verificacion.bloqueos.join("\n• ") + "\n\nRevisa tu carrito y vuelve a intentarlo.");
+    mostrarAviso("Tu pedido no se registró porque cambió el menú:\n• " + verificacion.bloqueos.join("\n• ") + "\n\nRevisa tu carrito y vuelve a intentarlo.", "error");
     btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); return;
   }
   const items = verificacion.items;
@@ -510,11 +575,16 @@ $("#pedir").addEventListener("click", async () => {
     sessionStorage.removeItem(KP); sessionStorage.removeItem(KC);
     carrito = {}; guardar(); pintarCarrito(); cerrarPanel();
     const tel = String(config.whatsapp || config.telefono || "").replace(/[^0-9]/g, "");
-    const resumen = items.map((i) => "• " + i.cantidad + "x " + i.nombre).join("\n");
-    alert("Pedido registrado. Tu codigo de consulta es " + codigo + ". El importe queda pendiente de confirmacion.");
-    if (tel) window.open("https://wa.me/57" + tel + "?text=" + encodeURIComponent("Pedido " + codigo + " en " + NEGOCIO.nombre + ":\n" + resumen + "\nImporte pendiente de confirmacion."), "_blank");
+    mostrarAviso("Pedido registrado con el código " + codigo + ". Te llevamos a WhatsApp con el detalle y el total.", "ok");
+    if (!tel) {
+      mostrarAviso("Tu pedido quedó registrado con el código " + codigo + ", pero el negocio no tiene un WhatsApp configurado. Escríbele directamente para enviarlo.", "error");
+    } else {
+      const destino = urlWhatsApp(items, codigo, tel);
+      if (ventanaWA && !ventanaWA.closed) ventanaWA.location.href = destino;
+      else window.location.assign(destino);
+    }
   } catch (e) {
-    alert("No pudimos registrar tu pedido (" + e.message + "). Revisa tu conexion y reintenta: no se cobro nada y tu intento queda guardado.");
+    mostrarAviso("No pudimos registrar tu pedido (" + e.message + "). Revisa tu conexión y reintenta: no se cobró nada y tu intento queda guardado.", "error");
   } finally { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); }
 });
 
