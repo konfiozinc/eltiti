@@ -471,6 +471,22 @@ $("#cerrar-panel").addEventListener("click", cerrarPanel);
 $("#velo").addEventListener("click", cerrarPanel);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $("#modal").classList.remove("on"); cerrarPanel(); } });
 
+/* ---- envío por WhatsApp: enlace HTTPS sin ventana emergente ---- */
+function numeroWhatsAppPedido() {
+  const v = String(config.whatsapp || config.telefono || "").replace(/[^0-9]/g, "");
+  if (/^57\d{10}$/.test(v)) return v;
+  if (/^\d{10}$/.test(v)) return "57" + v;
+  return "";
+}
+function abrirWhatsAppPedido(mensaje) {
+  const n = numeroWhatsAppPedido();
+  if (!n) { alert("No hay un número de WhatsApp válido configurado. Contacta directamente al negocio."); return false; }
+  const url = "https://wa.me/" + n + "?text=" + encodeURIComponent(mensaje);
+  try { sessionStorage.setItem("ks-ultimo-enlace-whatsapp", url); } catch(e) {}
+  window.location.assign(url);
+  return true;
+}
+
 /* ---- registro del pedido: mismo contrato con Firebase ---- */
 $("#pedir").addEventListener("click", async () => {
   const btn = $("#pedir");
@@ -506,17 +522,22 @@ $("#pedir").addEventListener("click", async () => {
   cuerpo[ns + "/pedidos/" + uuid] = { codigoConsulta: codigo, estado: "COTIZACION_PENDIENTE", total: 0, fechaCreacion: Date.now(), items };
   cuerpo[ns + "/pedidos_privados/" + uuid] = { codigoConsulta: codigo, items };
   cuerpo[ns + "/pedidos_publico/" + codigo] = { estado: "COTIZACION_PENDIENTE", fecha: new Date().toISOString().slice(0, 10), total: 0 };
+  const resumen = items.map((i) => "• " + i.cantidad + "x " + i.nombre).join("\n");
+  const mensajePedido = "Pedido " + codigo + " en " + NEGOCIO.nombre + ":\n" + resumen + "\nImporte pendiente de confirmación.";
   try {
-    const r = await fetch(base + "/.json" + consultaNs, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
-    if (r.status !== 200) throw new Error("respuesta " + r.status);
+    const r = await fetch(base + "/.json" + consultaNs, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cuerpo), signal: AbortSignal.timeout(20000)
+    });
+    if (!r.ok) throw new Error("respuesta " + r.status);
     sessionStorage.removeItem(KP); sessionStorage.removeItem(KC);
     carrito = {}; guardar(); pintarCarrito(); cerrarPanel();
-    const tel = String(config.whatsapp || config.telefono || "").replace(/[^0-9]/g, "");
-    const resumen = items.map((i) => "• " + i.cantidad + "x " + i.nombre).join("\n");
-    alert("Pedido registrado. Tu codigo de consulta es " + codigo + ". El importe queda pendiente de confirmacion.");
-    if (tel) window.open("https://wa.me/57" + tel + "?text=" + encodeURIComponent("Pedido " + codigo + " en " + NEGOCIO.nombre + ":\n" + resumen + "\nImporte pendiente de confirmacion."), "_blank");
+    alert("Pedido registrado. Tu código de consulta es " + codigo + ". El importe queda pendiente de confirmación. Ahora se abrirá WhatsApp para enviar el pedido.");
+    abrirWhatsAppPedido(mensajePedido);
   } catch (e) {
-    alert("No pudimos registrar tu pedido (" + e.message + "). Revisa tu conexion y reintenta: no se cobro nada y tu intento queda guardado.");
+    if (confirm("No pudimos confirmar el registro de tu pedido (" + e.message + "). El intento queda guardado. ¿Quieres consultar directamente por WhatsApp? El negocio deberá confirmar el pedido.")) {
+      abrirWhatsAppPedido("Consulta SIN REGISTRO CONFIRMADO en " + NEGOCIO.nombre + ":\n" + resumen + "\nReferencia " + codigo + ". Confirmen disponibilidad y precio.");
+    }
   } finally { btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); }
 });
 
