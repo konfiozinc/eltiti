@@ -503,7 +503,11 @@ $("#pedir").addEventListener("click", async () => {
   let verificacion = null;
   try { verificacion = await verificarAntesDePedir(enCarrito); } catch (e) { verificacion = null; }
   if (!verificacion) {
-    alert("No pudimos verificar la disponibilidad de tu pedido. No se registró nada y no se cobró nada: revisa tu conexión y vuelve a intentarlo.");
+    const resumenSinVerificar = enCarrito.map((i) => "• " + i.cantidad + "x " + i.nombre).join("\n");
+    const pregunta = "No pudimos consultar el menú en este momento. No se registró ningún pedido ni se confirmó disponibilidad o precio. ¿Quieres enviar una consulta manual por WhatsApp al negocio?";
+    if (confirm(pregunta)) {
+      abrirWhatsAppPedido("Consulta MANUAL SIN PEDIDO REGISTRADO en " + NEGOCIO.nombre + ":\n" + resumenSinVerificar + "\nPor favor confirmen disponibilidad, precio y recepción.");
+    }
     btn.disabled = false; btn.textContent = "Pedir por WhatsApp"; pintarCarrito(); return;
   }
   aplicarCatalogo(verificacion.catalogo);
