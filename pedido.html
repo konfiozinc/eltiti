@@ -101,7 +101,10 @@ input{font-family:inherit}
     </div>
 
     <!-- Pedido encontrado -->
-    <div x-show="pedido">
+    <!-- x-if y no x-show: con x-show Alpine sigue evaluando lo de dentro y, sin pedido,
+         lanzaba 5 errores de consola (pedido.numeroPedido sobre null). KZ-MENU-002. -->
+    <template x-if="pedido">
+    <div>
       <div class="card">
         <div class="row">
           <span class="num" x-text="pedido.numeroPedido || 'PEDIDO'"></span>
@@ -140,6 +143,7 @@ input{font-family:inherit}
 
       <div class="foot"><a href="index.html">← Volver al menú</a></div>
     </div>
+    </template>
   </div>
 </div>
 
