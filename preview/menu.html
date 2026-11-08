@@ -136,6 +136,15 @@ button{font-family:inherit}
     /* Aviso de pedido/error dentro de la página (sustituye al alert nativo). */
     .aviso--error{border-width:2px;font-weight:700}
     .aviso__accion{display:inline-block;margin-top:10px;font-weight:800;color:inherit;text-decoration:underline}
+/* ---- KZ-MENU-004 · botón de cantidad estilo Brosty Papas ---- */
+.fila .accion{display:inline-flex;align-items:center;gap:8px;margin-left:auto;flex:0 0 auto}
+.stepper[hidden],.agregar[hidden]{display:none}
+.stepper{display:inline-flex;align-items:center;gap:2px;background:rgba(255,195,0,.14);border-radius:999px;padding:2px}
+.stepper button{width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--acento);color:#fff;font-size:1.15rem;font-weight:900;line-height:1;cursor:pointer;transition:filter .15s}
+.stepper button:hover{filter:brightness(1.12)}
+.stepper button:focus-visible{outline:3px solid var(--acento2);outline-offset:2px}
+.stepper button[data-accion="restar"]{background:transparent;color:var(--acento);border:2px solid var(--acento);font-size:1.2rem}
+.stepper span{min-width:26px;text-align:center;font-weight:900;font-size:1rem;font-variant-numeric:tabular-nums}
 </style>
     <meta name="description" content="Menu de Eltiti. Tarjeta digital creada por KONFÍO ZINC.">
     <meta property="og:title" content="Menu · Eltiti">
@@ -409,7 +418,7 @@ function tarjeta(p) {
     '<div class="datos"><h3>' + esc(p.nombre) + "</h3>" +
     '<p class="meta">' + esc(meta) + "</p>" +
     '<div class="fila"><span class="precio">' + plato.format(p.precio || 0) + "</span>" +
-    '<button class="agregar" data-add="' + esc(p.id) + '"' + (agotado ? " disabled" : "") + ">Agregar</button></div></div></article>";
+    '<span class="accion" data-id="' + esc(p.id) + '"><button class="agregar" data-add="' + esc(p.id) + '"' + (agotado ? " disabled" : "") + ">Agregar</button></span></div></div></article>";
 }
 
 function pintar() {
@@ -477,6 +486,42 @@ function pintarCarrito() {
   const bloqueado = n === 0 || conAgotado || !conexion;
   $("#pedir").disabled = bloqueado;
   $("#pedir").textContent = (!conexion && n > 0) ? "Sin conexión" : (conAgotado && n > 0) ? "Revisa tu pedido" : "Pedir por WhatsApp";
+  pintarAcciones();
+}
+
+/* ---- KZ-MENU-004 · botón de cantidad estilo Brosty Papas ----
+   «Agregar» muta a [ − ][ cantidad ][ + ] cuando el producto está en la cesta y vuelve a
+   «Agregar» al llegar a cero. No cambia el carrito: solo dibuja su estado. */
+function accionDe(celda) {
+  let stepper = celda.querySelector(".stepper");
+  if (!stepper) {
+    stepper = document.createElement("span");
+    stepper.className = "stepper";
+    stepper.hidden = true;
+    stepper.innerHTML = '<button type="button" data-accion="restar" aria-label="Quitar uno">−</button>' +
+      '<span aria-live="polite">0</span>' +
+      '<button type="button" data-accion="sumar" aria-label="Agregar otro">+</button>';
+    celda.appendChild(stepper);
+    stepper.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-accion]");
+      if (!b) return;
+      const id = celda.dataset.id;
+      if (!id) return;
+      if (b.dataset.accion === "sumar") sumar(id); else quitarUno(id);
+    });
+  }
+  return { agregar: celda.querySelector(".agregar"), stepper: stepper };
+}
+
+function pintarAcciones() {
+  $("#lista").querySelectorAll(".fila .accion").forEach((celda) => {
+    const piezas = accionDe(celda);
+    const cantidad = Number(carrito[celda.dataset.id]) || 0;
+    if (piezas.agregar) piezas.agregar.hidden = cantidad > 0;
+    piezas.stepper.hidden = cantidad === 0;
+    const numero = piezas.stepper.querySelector("span");
+    if (numero) numero.textContent = String(cantidad);
+  });
 }
 
 function abrirPanel() { $("#panel").classList.add("on"); $("#velo").classList.add("on"); $("#panel").setAttribute("aria-hidden", "false"); }
