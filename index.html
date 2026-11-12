@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
@@ -211,6 +211,11 @@ button{font-family:inherit}
   <div class="panel-pie">
     <div class="totales"><span>Total</span><strong id="tot-final">$ 0</strong></div>
     <button id="pedir" disabled>Pedir por WhatsApp</button>
+    <!-- KZ-MENUS-007: enlace manual. Solo aparece si la apertura automática no se
+         pudo confirmar; el pedido y el carrito se conservan. -->
+    <a id="abrir-wa-manual" href="#" target="_blank" rel="noopener noreferrer"
+       style="display:none;align-items:center;justify-content:center;min-height:52px;margin-top:.6rem;border-radius:16px;background:var(--acento,#C8102E);color:#fff;font-weight:900;font-size:.95rem;text-decoration:none;padding:.6rem 1rem;text-align:center">Abrir WhatsApp con mi pedido</a>
+    <p id="manual-nota" style="display:none;margin:.55rem 0 0;font-size:.78rem;line-height:1.45;color:var(--tinta2,#585858)">Tu pedido quedó registrado y el carrito sigue aquí. El mensaje no se envía solo: lo envías tú desde WhatsApp.</p>
   </div>
 </aside>
 
@@ -603,6 +608,23 @@ function mensajePedido(items, codigo) {
   ].join("\n");
 }
 
+/* KZ-MENUS-007 · Enlace manual del pedido: se muestra cuando la apertura automática
+   no se pudo confirmar, y se oculta pasándole una dirección vacía. */
+function mostrarEnlacePedido(destino) {
+  const a = document.getElementById("abrir-wa-manual");
+  const nota = document.getElementById("manual-nota");
+  if (!a) return;
+  if (!destino) {
+    a.style.display = "none";
+    a.setAttribute("href", "#");
+    if (nota) nota.style.display = "none";
+    return;
+  }
+  a.setAttribute("href", destino);
+  a.style.display = "flex";
+  if (nota) nota.style.display = "block";
+}
+
 function urlWhatsApp(items, codigo, tel) {
   return "https://wa.me/" + telInternacional(tel) + "?text=" + encodeURIComponent(mensajePedido(items, codigo));
 }
@@ -658,17 +680,30 @@ $("#pedir").addEventListener("click", async () => {
     });
     if (!r.ok) throw new Error("respuesta " + r.status);
     sessionStorage.removeItem(KP); sessionStorage.removeItem(KC);
-    carrito = {}; guardar(); pintarCarrito(); cerrarPanel();
     const tel = String(config.whatsapp || config.telefono || "").replace(/[^0-9]/g, "");
-    mostrarAviso("Pedido registrado con el código " + codigo + ". Te llevamos a WhatsApp con el detalle y el total.", "ok");
     if (!tel) {
+      cerrarPanel();
       mostrarAviso("Tu pedido quedó registrado con el código " + codigo + ", pero el negocio no tiene un WhatsApp configurado. Escríbele directamente para enviarlo.", "error");
+      return;
+    }
+    const destino = urlWhatsApp(items, codigo, tel);
+    /* Igual que la reparación de producción: se recuerda el último enlace de WhatsApp del pedido. */
+    try { sessionStorage.setItem("ks-ultimo-enlace-whatsapp", destino); } catch (e) { /* modo privado */ }
+    /* KZ-MENUS-007 · Solo se da por abierto si la pestaña reservada existe y acepta la
+       dirección: es lo único que el navegador confirma. Si no se puede confirmar, NO
+       se vacía el carrito y se muestra un enlace que pulsa el cliente. */
+    let abierto = false;
+    if (ventanaWA && !ventanaWA.closed) {
+      try { ventanaWA.opener = null; ventanaWA.location.href = destino; abierto = true; } catch (e) { abierto = false; }
+    }
+    if (abierto) {
+      carrito = {}; guardar(); pintarCarrito(); cerrarPanel();
+      mostrarEnlacePedido("");
+      mostrarAviso("Pedido " + codigo + " registrado. Abrimos WhatsApp con el detalle: pulsa enviar.", "ok");
     } else {
-      const destino = urlWhatsApp(items, codigo, tel);
-      /* Igual que la reparación de producción: se recuerda el último enlace de WhatsApp del pedido. */
-      try { sessionStorage.setItem("ks-ultimo-enlace-whatsapp", destino); } catch (e) { /* modo privado */ }
-      if (ventanaWA && !ventanaWA.closed) ventanaWA.location.href = destino;
-      else window.location.assign(destino);
+      if (ventanaWA && !ventanaWA.closed) { try { ventanaWA.close(); } catch (e) {} }
+      mostrarEnlacePedido(destino);
+      mostrarAviso("Pedido " + codigo + " registrado. Pulsa «Abrir WhatsApp con mi pedido»: el carrito sigue aquí.", "ok");
     }
   } catch (e) {
     mostrarAviso(
