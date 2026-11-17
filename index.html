@@ -88,8 +88,12 @@ button{font-family:inherit}
 .bolsa .cuenta{display:grid;place-items:center;min-width:26px;height:26px;border-radius:999px;background:rgba(0,0,0,.3);font-size:.84rem}
 .velo{position:fixed;inset:0;z-index:70;background:rgba(6,6,8,.66);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
 .velo.on{opacity:1;pointer-events:auto}
-.panel{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;flex-direction:column;max-height:88dvh;background:var(--fondo2);border:1px solid var(--borde);border-radius:22px 22px 0 0;transform:translateY(103%);transition:transform .28s cubic-bezier(.22,.8,.2,1);box-shadow:0 -18px 50px rgba(0,0,0,.5)}
-.panel.on{transform:none}
+.panel{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;flex-direction:column;max-height:88dvh;background:var(--fondo2);border:1px solid var(--borde);border-radius:22px 22px 0 0;transform:translateY(103%);visibility:hidden;transition:transform .28s cubic-bezier(.22,.8,.2,1),visibility 0s linear .28s;box-shadow:0 -18px 50px rgba(0,0,0,.5)}
+/* KZ-QUALITY-006: cerrado, el panel deja de ser alcanzable con el tabulador
+   (visibility) además de salir de pantalla con transform. Al abrir se anula la
+   transición de visibility para que aparezca de inmediato; al cerrar se retrasa
+   para no cortar la animación de salida. Mismo patrón que brosty-papas. */
+.panel.on{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.22,.8,.2,1),visibility 0s linear 0s}
 @media(min-width:900px){
   .panel{left:auto;right:0;top:0;bottom:0;width:min(420px,92vw);max-height:100dvh;border-radius:22px 0 0 22px;transform:translateX(104%)}
   .panel.on{transform:none}
